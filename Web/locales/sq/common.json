@@ -1,0 +1,109 @@
+{
+  "app": {
+    "name": "RaiseYourVoice",
+    "tagline": "Amplifiko aktivizmin tuaj"
+  },
+  "nav": {
+    "feed": "Postimet Sociale",
+    "opportunities": "Mundësitë",
+    "successStories": "Histori Suksesi",
+    "profile": "Profili",
+    "login": "Hyr",
+    "register": "Regjistrohu",
+    "logout": "Dil"
+  },
+  "footer": {
+    "tagline": "Duke fuqizuar aktivistët në mbarë botën",
+    "about": "Rreth Nesh",
+    "privacy": "Politika e Privatësisë",
+    "terms": "Kushtet e Shërbimit",
+    "contact": "Na Kontaktoni",
+    "rights": "Të Gjitha të Drejtat e Rezervuara"
+  },
+  "feed": {
+    "title": "Postimet Sociale",
+    "description": "Lidhu me aktivistë dhe organizata që po bëjnë ndryshime.",
+    "createPost": "Krijo Postim",
+    "likes": "Pëlqime",
+    "comments": "Komente",
+    "noPosts": {
+      "title": "Nuk ka postime ende",
+      "description": "Bëhu i pari që ndan udhëtimin tënd të aktivizmit!"
+    }
+  },
+  "opportunities": {
+    "title": "Mundësitë",
+    "description": "Zbulo financime, ngjarje dhe mënyra për t'u përfshirë.",
+    "createOpportunity": "Krijo Mundësi",
+    "categories": {
+      "funding": "Financim",
+      "events": "Ngjarje",
+      "volunteer": "Vullnetarizëm",
+      "mun": "Model UN",
+      "mobility": "Programe Mobiliteti"
+    },
+    "noOpportunities": {
+      "title": "Nuk ka mundësi ende",
+      "description": "Rikontrollo së shpejti për mundësi!"
+    }
+  },
+  "successStories": {
+    "title": "Histori Suksesi",
+    "description": "Mëso nga fushata të suksesshme aktivizmi dhe individë frymëzues.",
+    "featuredActivist": "Aktivisti i Muajit",
+    "organizationSpotlight": "Organizata në Fokus",
+    "noStories": {
+      "title": "Nuk ka histori ende",
+      "description": "Historitë e suksesit do të paraqiten këtu së shpejti!"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Mirë se u ktheve",
+      "subtitle": "Hyr në llogarinë tënde RaiseYourVoice",
+      "emailLabel": "Email",
+      "passwordLabel": "Fjalëkalimi",
+      "loginButton": "Hyr",
+      "forgotPassword": "Harrove fjalëkalimin?",
+      "noAccount": "Nuk ke llogari?",
+      "register": "Regjistrohu"
+    },
+    "register": {
+      "title": "Bashkohu me RaiseYourVoice",
+      "subtitle": "Krijo llogarinë tënde dhe fillo të bësh ndikim",
+      "nameLabel": "Emri i Plotë",
+      "emailLabel": "Email",
+      "passwordLabel": "Fjalëkalimi",
+      "confirmPasswordLabel": "Konfirmo Fjalëkalimin",
+      "bioLabel": "Bio e Shkurtër",
+      "registerButton": "Regjistrohu",
+      "haveAccount": "Tashmë keni një llogari?",
+      "login": "Hyr"
+    }
+  },
+  "notifications": {
+    "title": "Njoftimet",
+    "empty": "Nuk ka njoftime për t'u shfaqur",
+    "markAsRead": "Shëno si të lexuar",
+    "dismiss": "Largo",
+    "viewAll": "Shiko të gjitha njoftimet",
+    "types": {
+      "postCreated": "Postim i Ri",
+      "commentAdded": "Koment i Ri",
+      "eventReminder": "Kujtesë Ngjarjeje",
+      "fundingOpportunity": "Mundësi Financimi",
+      "systemAnnouncement": "Njoftim Sistemi",
+      "verificationUpdate": "Përditësim Verifikimi",
+      "userMention": "Përmendja e Përdoruesit"
+    }
+  },
+  "errors": {
+    "fetchFailed": "Dështoi në ngarkim të të dhënave. Ju lutemi provoni përsëri.",
+    "loginFailed": "Hyrja dështoi. Ju lutemi kontrolloni kredencialet tuaja.",
+    "registerFailed": "Regjistrimi dështoi. Ju lutemi provoni përsëri.",
+    "required": "Kjo fushë është e detyrueshme",
+    "invalidEmail": "Ju lutemi vendosni një adresë email-i të vlefshme",
+    "passwordLength": "Fjalëkalimi duhet të jetë të paktën 8 karaktere",
+    "passwordMatch": "Fjalëkalimet nuk përputhen"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "app": {
+    "name": "RaiseYourVoice",
+    "tagline": "Amplify your activism"
+  },
+  "nav": {
+    "feed": "Social Feed",
+    "opportunities": "Opportunities",
+    "successStories": "Success Stories",
+    "profile": "Profile",
+    "login": "Log In",
+    "register": "Register",
+    "logout": "Log Out"
+  },
+  "footer": {
+    "tagline": "Empowering activists worldwide",
+    "about": "About Us",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact Us",
+    "rights": "All Rights Reserved"
+  },
+  "feed": {
+    "title": "Social Feed",
+    "description": "Connect with activists and organizations making a difference.",
+    "createPost": "Create Post",
+    "likes": "Likes",
+    "comments": "Comments",
+    "noPosts": {
+      "title": "No posts yet",
+      "description": "Be the first to share your activism journey!"
+    }
+  },
+  "opportunities": {
+    "title": "Opportunities",
+    "description": "Discover funding, events, and ways to get involved.",
+    "createOpportunity": "Create Opportunity",
+    "categories": {
+      "funding": "Funding",
+      "events": "Events",
+      "volunteer": "Volunteer",
+      "mun": "Model UN",
+      "mobility": "Mobility Programs"
+    },
+    "noOpportunities": {
+      "title": "No opportunities yet",
+      "description": "Check back soon for opportunities!"
+    }
+  },
+  "successStories": {
+    "title": "Success Stories",
+    "description": "Learn from successful activism campaigns and inspiring individuals.",
+    "featuredActivist": "Activist of the Month",
+    "organizationSpotlight": "Organization Spotlight",
+    "noStories": {
+      "title": "No stories yet",
+      "description": "Success stories will be featured here soon!"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Log in to your RaiseYourVoice account",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "loginButton": "Log In",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "register": "Register"
+    },
+    "register": {
+      "title": "Join RaiseYourVoice",
+      "subtitle": "Create your account and start making an impact",
+      "nameLabel": "Full Name",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm Password",
+      "bioLabel": "Short Bio",
+      "registerButton": "Register",
+      "haveAccount": "Already have an account?",
+      "login": "Log In"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications to display",
+    "markAsRead": "Mark as read",
+    "dismiss": "Dismiss",
+    "viewAll": "View all notifications",
+    "types": {
+      "postCreated": "New Post",
+      "commentAdded": "New Comment",
+      "eventReminder": "Event Reminder",
+      "fundingOpportunity": "Funding Opportunity",
+      "systemAnnouncement": "System Announcement",
+      "verificationUpdate": "Verification Update",
+      "userMention": "User Mention"
+    }
+  },
+  "errors": {
+    "fetchFailed": "Failed to load data. Please try again.",
+    "loginFailed": "Login failed. Please check your credentials.",
+    "registerFailed": "Registration failed. Please try again.",
+    "required": "This field is required",
+    "invalidEmail": "Please enter a valid email address",
+    "passwordLength": "Password must be at least 8 characters",
+    "passwordMatch": "Passwords do not match"
+  }
+}

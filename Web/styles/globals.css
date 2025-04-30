@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* iOS-inspired styling */
+.ios-button {
+  @apply rounded-full px-6 py-2.5 font-semibold transition-all duration-200 text-white bg-ios-black hover:bg-opacity-90 active:bg-opacity-80;
+}
+
+.ios-input {
+  @apply rounded-lg border border-gray-200 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-ios-black transition-all;
+}
+
+.ios-card {
+  @apply rounded-xl bg-white shadow-md transition-shadow hover:shadow-lg;
+}
+
+/* Animations */
+.ios-fade-in {
+  animation: ios-fade-in 0.3s ease-in forwards;
+}
+
+@keyframes ios-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ios-slide-up {
+  animation: ios-slide-up 0.4s ease-out forwards;
+}
+
+@keyframes ios-slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

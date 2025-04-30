@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:80"
+      - "5001:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;https://+:443
+      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
+      - MongoDbSettings__DatabaseName=RaiseYourVoiceDb
+      - ConnectionStrings__RedisConnection=redis:6379
+    depends_on:
+      - mongodb
+      - redis
+    restart: always
+    volumes:
+      - ./certs:/app/certs:ro
+      - api-data:/app/data
+    networks:
+      - ryv-network
+
+  web:
+    build:
+      context: ./Web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - API_URL=https://api:443
+    depends_on:
+      - api
+    restart: always
+    networks:
+      - ryv-network
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    restart: always
+    networks:
+      - ryv-network
+    command: ["--bind_ip_all"]
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: always
+    networks:
+      - ryv-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+      - web
+    restart: always
+    networks:
+      - ryv-network
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./nginx/certs:/etc/letsencrypt
+      - ./nginx/html:/var/www/html
+    depends_on:
+      - nginx
+    command: ["--dry-run"]
+    networks:
+      - ryv-network
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    restart: always
+    networks:
+      - ryv-network
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: always
+    networks:
+      - ryv-network
+    depends_on:
+      - prometheus
+
+volumes:
+  mongodb-data:
+  redis-data:
+  api-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  ryv-network:
+    driver: bridge
