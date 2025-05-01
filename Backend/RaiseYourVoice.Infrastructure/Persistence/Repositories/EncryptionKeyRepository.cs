@@ -34,7 +34,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
                 filter = Builders<EncryptionKey>.Filter.And(
                     filter,
                     Builders<EncryptionKey>.Filter.Or(
-                        Builders<EncryptionKey>.Filter.Eq(k => k.ExpiresAt, null),
+                        Builders<EncryptionKey>.Filter.Exists(k => k.ExpiresAt, false), // Check if ExpiresAt doesn't exist or is null
                         Builders<EncryptionKey>.Filter.Gt(k => k.ExpiresAt, now)
                     )
                 );

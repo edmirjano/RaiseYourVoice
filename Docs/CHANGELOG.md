@@ -1,5 +1,27 @@
 # Changelog
 
+## [Build Problem Fixes] - 2025-05-01 23:00
+
+### Fixed
+- Fixed build errors in WebhooksController.cs:
+  - Added missing Stripe.net package (version 48.1.0) to resolve 'Events' reference issues
+  - Updated code to use the proper namespace with `Stripe.Events` instead of just `Events`
+  - Changed `ChargeId` property references to `PaymentIntentId` to align with latest Stripe API
+- Fixed rate limiting configuration issues in Program.cs:
+  - Updated to use built-in ASP.NET Core rate limiting APIs 
+  - Added proper namespace references to Microsoft.AspNetCore.RateLimiting
+  - Fixed configuration of QueueProcessingOrder and other rate limiter options
+- Fixed MongoDB repository implementation issues:
+  - Added missing `Id` property to TeamMember class in Organization entity
+  - Fixed DateTime null comparison in EncryptionKeyRepository by using `Filter.Exists()` instead of direct null comparison
+  - Resolved null argument issue when checking for expired encryption keys
+
+### Improved
+- Enhanced code maintainability through proper namespace usage
+- Updated Stripe integration to use the latest API conventions
+- Improved MongoDB query patterns for better performance and stability
+- Ensured consistent repository patterns across the codebase
+
 ## [Repository Structure Fix & MongoDB Integration] - 2025-05-01 21:15
 
 ### Fixed

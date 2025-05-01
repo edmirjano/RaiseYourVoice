@@ -48,6 +48,7 @@ namespace RaiseYourVoice.Domain.Entities
 
     public class TeamMember
     {
+        public required string Id { get; set; } = Guid.NewGuid().ToString();
         public required string Name { get; set; }
         public required string Role { get; set; }
         public string? Bio { get; set; }

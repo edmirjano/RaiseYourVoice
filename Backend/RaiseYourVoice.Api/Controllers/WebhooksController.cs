@@ -4,6 +4,9 @@ using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Enums;
 using RaiseYourVoice.Infrastructure.Services;
 using Stripe;
+using Stripe.Checkout;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace RaiseYourVoice.Api.Controllers
 {
@@ -47,31 +50,31 @@ namespace RaiseYourVoice.Api.Controllers
                 // Handle the event
                 switch (stripeEvent.Type)
                 {
-                    case Events.PaymentIntentSucceeded:
+                    case Stripe.Events.PaymentIntentSucceeded:
                         var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
                         await HandlePaymentIntentSucceeded(paymentIntent);
                         break;
-                    case Events.PaymentIntentPaymentFailed:
+                    case Stripe.Events.PaymentIntentPaymentFailed:
                         var failedPaymentIntent = stripeEvent.Data.Object as PaymentIntent;
                         await HandlePaymentIntentFailed(failedPaymentIntent);
                         break;
-                    case Events.CustomerSubscriptionCreated:
+                    case Stripe.Events.CustomerSubscriptionCreated:
                         var subscription = stripeEvent.Data.Object as Subscription;
                         await HandleSubscriptionCreated(subscription);
                         break;
-                    case Events.CustomerSubscriptionUpdated:
+                    case Stripe.Events.CustomerSubscriptionUpdated:
                         var updatedSubscription = stripeEvent.Data.Object as Subscription;
                         await HandleSubscriptionUpdated(updatedSubscription);
                         break;
-                    case Events.CustomerSubscriptionDeleted:
+                    case Stripe.Events.CustomerSubscriptionDeleted:
                         var deletedSubscription = stripeEvent.Data.Object as Subscription;
                         await HandleSubscriptionCancelled(deletedSubscription);
                         break;
-                    case Events.InvoicePaid:
+                    case Stripe.Events.InvoicePaid:
                         var invoice = stripeEvent.Data.Object as Invoice;
                         await HandleInvoicePaid(invoice);
                         break;
-                    case Events.InvoicePaymentFailed:
+                    case Stripe.Events.InvoicePaymentFailed:
                         var failedInvoice = stripeEvent.Data.Object as Invoice;
                         await HandleInvoicePaymentFailed(failedInvoice);
                         break;
@@ -181,7 +184,7 @@ namespace RaiseYourVoice.Api.Controllers
             _logger.LogInformation("Invoice paid: {0}", invoice.Id);
             
             // This handles recurring subscription payments
-            if (invoice.SubscriptionId != null)
+            if (!string.IsNullOrEmpty(invoice.SubscriptionId))
             {
                 // Get the subscription details
                 var subscriptionService = new SubscriptionService();
@@ -207,7 +210,7 @@ namespace RaiseYourVoice.Api.Controllers
                         PaymentStatus = PaymentStatus.Completed,
                         PaymentMethod = "card", // Assuming card payment through subscription
                         Currency = invoice.Currency,
-                        TransactionId = invoice.ChargeId,
+                        TransactionId = invoice.PaymentIntentId, // Use PaymentIntentId instead of ChargeId
                         IsSubscriptionDonation = true,
                         SubscriptionId = invoice.SubscriptionId,
                         CreatedAt = DateTime.UtcNow

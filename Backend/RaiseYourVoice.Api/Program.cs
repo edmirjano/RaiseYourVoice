@@ -149,25 +149,15 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    
     options.AddFixedWindowLimiter("fixed", options =>
     {
+        options.AutoReplenishment = true;
         options.PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100");
         options.Window = TimeSpan.FromMinutes(1);
-        options.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        options.QueueProcessingOrder = Microsoft.AspNetCore.RateLimiting.QueueProcessingOrder.OldestFirst;
         options.QueueLimit = 0; // No queuing, just reject when limit is hit
     });
-    
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: "fixed",
-            factory: partition => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100"),
-                Window = TimeSpan.FromMinutes(1),
-                QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            })
-    );
 });
 
 // Configure Health Checks
