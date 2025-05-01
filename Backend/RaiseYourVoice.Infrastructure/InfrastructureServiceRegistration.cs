@@ -36,6 +36,7 @@ namespace RaiseYourVoice.Infrastructure
             services.AddScoped<IGenericRepository<Donation>, DonationRepository>();
             services.AddScoped<IGenericRepository<Notification>, NotificationRepository>();
             services.AddScoped<IGenericRepository<RefreshToken>, RefreshTokenRepository>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IEncryptionKeyRepository, EncryptionKeyRepository>();
 
             // Register services
@@ -49,6 +50,7 @@ namespace RaiseYourVoice.Infrastructure
             services.AddScoped<IPasswordHasher, PasswordHasher>();
             services.AddScoped<EncryptionLoggingService>();
             services.AddScoped<IEncryptionService, EncryptionService>();
+            services.AddSingleton<JwtKeyManager>();
 
             // Configure payment gateway
             services.Configure<StripeSettings>(configuration.GetSection("Stripe"));

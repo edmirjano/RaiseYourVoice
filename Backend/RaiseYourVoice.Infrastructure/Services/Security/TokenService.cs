@@ -1,30 +1,37 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Entities;
+using RaiseYourVoice.Infrastructure.Security;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using MongoDB.Driver;
 
 namespace RaiseYourVoice.Infrastructure.Services.Security
 {
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
-        private readonly IMongoCollection<RefreshToken> _refreshTokens;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly JwtKeyManager _keyManager;
 
-        public TokenService(IConfiguration configuration, IMongoClient mongoClient)
+        public TokenService(
+            IConfiguration configuration, 
+            IRefreshTokenRepository refreshTokenRepository,
+            JwtKeyManager keyManager)
         {
             _configuration = configuration;
-            var database = mongoClient.GetDatabase("RaiseYourVoice");
-            _refreshTokens = database.GetCollection<RefreshToken>("RefreshTokens");
+            _refreshTokenRepository = refreshTokenRepository;
+            _keyManager = keyManager;
         }
 
         public string GenerateJwtToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var keyString = _configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT secret key is not configured");
-            var key = Encoding.UTF8.GetBytes(keyString);
+            
+            // Get the current signing key with its ID from the key manager
+            var (signingKey, keyId) = _keyManager.GetCurrentSigningKey();
             
             var claims = new List<Claim>
             {
@@ -38,9 +45,14 @@ namespace RaiseYourVoice.Infrastructure.Services.Security
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(_configuration["JwtSettings:ExpiryMinutes"] ?? "60")),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256Signature),
                 Issuer = _configuration["JwtSettings:Issuer"],
-                Audience = _configuration["JwtSettings:Audience"]
+                Audience = _configuration["JwtSettings:Audience"],
+                // Include the key ID in the token header for key identification during validation
+                AdditionalHeaderClaims = new Dictionary<string, object>
+                {
+                    { "kid", keyId }
+                }
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -61,12 +73,9 @@ namespace RaiseYourVoice.Infrastructure.Services.Security
             {
                 var issuer = _configuration["JwtSettings:Issuer"];
                 var audience = _configuration["JwtSettings:Audience"];
-                var secretKey = _configuration["JwtSettings:SecretKey"];
                 
-                if (string.IsNullOrEmpty(secretKey))
-                {
-                    throw new InvalidOperationException("JWT secret key is not configured");
-                }
+                // Get all signing keys from the key manager to support tokens signed with previous keys
+                var signingKeys = _keyManager.GetAllSigningKeys();
                 
                 var tokenValidationParameters = new TokenValidationParameters
                 {
@@ -76,7 +85,8 @@ namespace RaiseYourVoice.Infrastructure.Services.Security
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = issuer,
                     ValidAudience = audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+                    // Use all available keys for validation to support tokens signed with previous keys
+                    IssuerSigningKeys = signingKeys
                 };
 
                 var tokenHandler = new JwtSecurityTokenHandler();
@@ -101,7 +111,7 @@ namespace RaiseYourVoice.Infrastructure.Services.Security
             var accessToken = GenerateJwtToken(user);
             var refreshToken = GenerateRefreshToken();
             
-            // Store refresh token
+            // Store refresh token using repository
             await SaveRefreshTokenAsync(user.Id, refreshToken, DateTime.UtcNow.AddDays(7));
             
             return (accessToken, refreshToken);
@@ -109,10 +119,8 @@ namespace RaiseYourVoice.Infrastructure.Services.Security
 
         public async Task<bool> ValidateRefreshTokenAsync(string userId, string refreshToken)
         {
-            var storedToken = await _refreshTokens
-                .Find(rt => rt.UserId == userId && rt.Token == refreshToken && rt.ExpiryDate > DateTime.UtcNow && !rt.IsRevoked)
-                .FirstOrDefaultAsync();
-            
+            // Use repository to find valid token
+            var storedToken = await _refreshTokenRepository.FindValidTokenAsync(userId, refreshToken);
             return storedToken != null;
         }
 
@@ -126,19 +134,14 @@ namespace RaiseYourVoice.Infrastructure.Services.Security
                 CreatedAt = DateTime.UtcNow
             };
             
-            await _refreshTokens.InsertOneAsync(token);
+            // Use repository to add the token
+            await _refreshTokenRepository.AddAsync(token);
         }
 
         public async Task RevokeRefreshTokenAsync(string userId, string refreshToken)
         {
-            var update = Builders<RefreshToken>.Update
-                .Set(rt => rt.IsRevoked, true)
-                .Set(rt => rt.RevokedAt, DateTime.UtcNow)
-                .Set(rt => rt.UpdatedAt, DateTime.UtcNow);
-            
-            await _refreshTokens.UpdateOneAsync(
-                rt => rt.UserId == userId && rt.Token == refreshToken,
-                update);
+            // Use repository to mark token as revoked
+            await _refreshTokenRepository.MarkTokenAsRevokedAsync(userId, refreshToken);
         }
     }
 }

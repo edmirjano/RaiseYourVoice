@@ -6,8 +6,16 @@ using System.Text;
 using RaiseYourVoice.Api.Middleware;
 using RaiseYourVoice.Infrastructure.Services.Security;
 using RaiseYourVoice.Infrastructure.Persistence;
+using RaiseYourVoice.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure environment-based configuration
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables("RYV_") // Add environment variables with RYV_ prefix for Kubernetes
+    .AddUserSecrets<Program>(optional: true); // Use user secrets for local development
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -91,10 +99,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Configure JWT Authentication
-var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
-var key = Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]);
-
+// Configure JWT Authentication - now using JwtKeyManager
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -102,6 +107,9 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    var serviceProvider = builder.Services.BuildServiceProvider();
+    var keyManager = serviceProvider.GetRequiredService<JwtKeyManager>();
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -110,7 +118,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(key),
+        IssuerSigningKeys = keyManager.GetAllSigningKeys(), // Use all keys from the key manager
         ClockSkew = TimeSpan.Zero // Recommended for refresh token scenarios to avoid overlap
     };
 
@@ -123,6 +131,14 @@ builder.Services.AddAuthentication(options =>
                 // Add a custom header to indicate token expiration
                 context.Response.Headers.Add("Token-Expired", "true");
             }
+            return Task.CompletedTask;
+        },
+        // This event is called when tokens are received - we refresh the token validation parameters
+        // to ensure we're using the latest keys for validation
+        OnMessageReceived = context =>
+        {
+            var updatedKeyManager = context.HttpContext.RequestServices.GetRequiredService<JwtKeyManager>();
+            options.TokenValidationParameters.IssuerSigningKeys = updatedKeyManager.GetAllSigningKeys();
             return Task.CompletedTask;
         }
     };
@@ -145,8 +161,10 @@ builder.Services.AddRateLimiter(options =>
 
 // Configure Health Checks
 builder.Services.AddHealthChecks()
-    .AddMongoDb(builder.Configuration["MongoDbSettings:ConnectionString"])
-    .AddRedis(builder.Configuration.GetConnectionString("RedisConnection"));
+    .AddMongoDb(builder.Configuration["MongoDbSettings:ConnectionString"] 
+        ?? throw new InvalidOperationException("MongoDB connection string is not configured."))
+    .AddRedis(builder.Configuration.GetConnectionString("RedisConnection") 
+        ?? throw new InvalidOperationException("Redis connection string is not configured."));
 
 var app = builder.Build();
 
@@ -181,6 +199,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+// Log configuration source (but not values) for debugging
+if (app.Environment.IsDevelopment())
+{
+    var configurationSources = ((IConfigurationRoot)app.Configuration).Providers.Select(p => p.GetType().Name);
+    app.Logger.LogInformation("Configuration providers: {Providers}", string.Join(", ", configurationSources));
+}
 
 // Create MongoDB indexes during startup
 using (var scope = app.Services.CreateScope())

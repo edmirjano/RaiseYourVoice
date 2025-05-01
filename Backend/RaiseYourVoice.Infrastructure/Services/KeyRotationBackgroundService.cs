@@ -56,6 +56,7 @@ namespace RaiseYourVoice.Infrastructure.Services
                     using var scope = _serviceProvider.CreateScope();
                     var encryptionService = scope.ServiceProvider.GetRequiredService<IEncryptionService>();
                     var encryptionLogger = scope.ServiceProvider.GetService<EncryptionLoggingService>();
+                    var jwtKeyManager = scope.ServiceProvider.GetService<JwtKeyManager>();
                     
                     // Log the start of key rotation check
                     encryptionLogger?.LogSecurityEvent(
@@ -63,11 +64,28 @@ namespace RaiseYourVoice.Infrastructure.Services
                         "Scheduled key rotation check is being performed",
                         severity: 0);
                     
-                    // Perform key rotation check
-                    bool anyRotated = await encryptionService.PerformScheduledKeyRotationAsync();
+                    // Perform encryption key rotation check
+                    bool encryptionKeysRotated = await encryptionService.PerformScheduledKeyRotationAsync();
+                    
+                    // Perform JWT key rotation
+                    bool jwtKeyRotated = false;
+                    if (jwtKeyManager != null)
+                    {
+                        jwtKeyRotated = jwtKeyManager.RotateSigningKey();
+                        
+                        if (jwtKeyRotated)
+                        {
+                            encryptionLogger?.LogSecurityEvent(
+                                "JwtKeyRotationPerformed",
+                                "JWT signing key rotation performed successfully",
+                                severity: 0);
+                            
+                            _logger.LogInformation("JWT signing key rotation performed successfully");
+                        }
+                    }
                     
                     // Log the result of key rotation check
-                    if (anyRotated)
+                    if (encryptionKeysRotated || jwtKeyRotated)
                     {
                         encryptionLogger?.LogSecurityEvent(
                             "KeyRotationPerformed",
@@ -139,5 +157,10 @@ namespace RaiseYourVoice.Infrastructure.Services
         /// How often to check for key rotation needs (in hours)
         /// </summary>
         public int CheckIntervalHours { get; set; } = 12;
+        
+        /// <summary>
+        /// How often to rotate JWT signing keys (in hours)
+        /// </summary>
+        public int JwtKeyRotationHours { get; set; } = 24;
     }
 }
