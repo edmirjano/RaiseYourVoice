@@ -1,5 +1,3 @@
-using System;
-
 namespace RaiseYourVoice.Domain.Common
 {
     /// <summary>

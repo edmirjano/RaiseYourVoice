@@ -1,4 +1,3 @@
-using System;
 using RaiseYourVoice.Domain.Common;
 
 namespace RaiseYourVoice.Domain.Entities

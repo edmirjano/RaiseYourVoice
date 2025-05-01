@@ -5,9 +5,6 @@ using RaiseYourVoice.Application.Models.Requests;
 using RaiseYourVoice.Application.Models.Responses;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RaiseYourVoice.Api.Controllers
 {

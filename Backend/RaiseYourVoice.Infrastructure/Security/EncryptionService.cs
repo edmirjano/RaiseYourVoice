@@ -1,14 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace RaiseYourVoice.Infrastructure.Security

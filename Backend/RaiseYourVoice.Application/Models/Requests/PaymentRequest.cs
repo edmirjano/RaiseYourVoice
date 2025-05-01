@@ -1,4 +1,3 @@
-using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 

@@ -1,5 +1,3 @@
-using System;
-using System.Text;
 using RaiseYourVoice.Application.Interfaces;
 
 namespace RaiseYourVoice.Api.Security

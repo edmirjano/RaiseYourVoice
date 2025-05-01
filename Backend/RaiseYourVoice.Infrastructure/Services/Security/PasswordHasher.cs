@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using RaiseYourVoice.Application.Interfaces;
-using System;
 using System.Security.Cryptography;
 
 namespace RaiseYourVoice.Infrastructure.Services.Security

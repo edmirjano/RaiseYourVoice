@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-
 namespace RaiseYourVoice.Api.Middleware
 {
     public static class LocalizationMiddlewareExtensions

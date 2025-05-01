@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using RaiseYourVoice.Domain.Common;
 using RaiseYourVoice.Domain.Enums;
 

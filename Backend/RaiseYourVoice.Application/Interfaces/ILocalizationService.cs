@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace RaiseYourVoice.Application.Interfaces
 {
     public interface ILocalizationService

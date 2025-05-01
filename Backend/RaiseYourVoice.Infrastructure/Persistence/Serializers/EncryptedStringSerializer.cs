@@ -1,9 +1,6 @@
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using RaiseYourVoice.Application.Interfaces;
-using RaiseYourVoice.Domain.Common;
-using System;
-using System.Reflection;
 
 namespace RaiseYourVoice.Infrastructure.Persistence.Serializers
 {

@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using RaiseYourVoice.Domain.Entities;
 
 namespace RaiseYourVoice.Application.Interfaces

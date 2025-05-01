@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using MongoDB.Driver;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;
-using RaiseYourVoice.Infrastructure.Persistence;
-using System.Linq;
 
 namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {

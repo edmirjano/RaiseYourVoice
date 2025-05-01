@@ -1,9 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Threading.Tasks;
-
 namespace RaiseYourVoice.Api.Middleware
 {
     public class ApiKeyMiddleware

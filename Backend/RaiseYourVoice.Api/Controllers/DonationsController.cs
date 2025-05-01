@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Application.Models.Requests;
 using RaiseYourVoice.Domain.Entities;
-using RaiseYourVoice.Domain.Enums;
 
 namespace RaiseYourVoice.Api.Controllers
 {

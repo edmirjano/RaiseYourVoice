@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using MongoDB.Driver;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;

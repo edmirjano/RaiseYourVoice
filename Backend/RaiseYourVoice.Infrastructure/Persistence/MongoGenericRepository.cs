@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using MongoDB.Driver;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Common;

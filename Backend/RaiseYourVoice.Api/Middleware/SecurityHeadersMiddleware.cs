@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
-
 namespace RaiseYourVoice.Api.Middleware
 {
     public class SecurityHeadersMiddleware

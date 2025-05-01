@@ -1,7 +1,3 @@
-using System;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using RaiseYourVoice.Api.Security;
 
 namespace RaiseYourVoice.Api.Middleware

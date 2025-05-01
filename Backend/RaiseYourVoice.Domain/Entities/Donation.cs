@@ -1,4 +1,3 @@
-using System;
 using RaiseYourVoice.Domain.Common;
 using RaiseYourVoice.Domain.Enums;
 
