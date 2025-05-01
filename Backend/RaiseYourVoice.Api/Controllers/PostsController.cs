@@ -75,7 +75,7 @@ namespace RaiseYourVoice.Api.Controllers
         public async Task<ActionResult<Post>> CreatePost(Post post)
         {
             // Set author ID from the authenticated user
-            post.AuthorId = User.Identity.Name;
+            post.AuthorId = User.Identity?.Name ?? string.Empty;
             post.CreatedAt = DateTime.UtcNow;
             post.Status = PostStatus.Published;
             
@@ -99,7 +99,7 @@ namespace RaiseYourVoice.Api.Controllers
                 return NotFound();
             }
             
-            if (existingPost.AuthorId != User.Identity.Name && 
+            if (existingPost.AuthorId != User.Identity?.Name && 
                 !User.IsInRole("Admin") && 
                 !User.IsInRole("Moderator"))
             {
@@ -127,7 +127,7 @@ namespace RaiseYourVoice.Api.Controllers
             }
             
             // Check if user is author or admin/moderator
-            if (post.AuthorId != User.Identity.Name && 
+            if (post.AuthorId != User.Identity?.Name && 
                 !User.IsInRole("Admin") && 
                 !User.IsInRole("Moderator"))
             {

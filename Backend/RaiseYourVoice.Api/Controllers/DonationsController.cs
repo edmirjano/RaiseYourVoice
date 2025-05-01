@@ -102,10 +102,10 @@ namespace RaiseYourVoice.Api.Controllers
                 }
 
                 // Create donation record
-                string userId = User.Identity?.Name;
+                string userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
                 
                 // Create donor information from customer info if available
-                DonorInformation donorInfo = null;
+                DonorInformation? donorInfo = null;
                 if (paymentRequest.CustomerInfo != null)
                 {
                     donorInfo = new DonorInformation
@@ -222,7 +222,7 @@ namespace RaiseYourVoice.Api.Controllers
         {
             try
             {
-                string userId = User.Identity.Name;
+                string userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
                 
                 var result = await _donationService.CreateSubscriptionDonationAsync(
                     userId, 

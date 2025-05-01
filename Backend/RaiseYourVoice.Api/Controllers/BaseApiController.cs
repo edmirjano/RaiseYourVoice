@@ -51,7 +51,7 @@ namespace RaiseYourVoice.Api.Controllers
         /// <param name="messageKey">The translation key for the message</param>
         /// <param name="data">Optional data to include in the response</param>
         /// <returns>An action result with the message and data</returns>
-        protected IActionResult SuccessWithLocalizedMessage(string messageKey, object data = null)
+        protected IActionResult SuccessWithLocalizedMessage(string messageKey, object? data = null)
         {
             var response = new
             {

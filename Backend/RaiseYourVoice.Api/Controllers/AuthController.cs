@@ -116,7 +116,7 @@ namespace RaiseYourVoice.Api.Controllers
                     return Unauthorized("Invalid token");
                 }
                 
-                var userId = principal.Identity.Name;
+                var userId = principal.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
 
                 // Validate refresh token
                 var isRefreshTokenValid = await _tokenService.ValidateRefreshTokenAsync(userId, request.RefreshToken);

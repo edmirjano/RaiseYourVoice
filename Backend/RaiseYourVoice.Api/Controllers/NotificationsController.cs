@@ -29,7 +29,7 @@ namespace RaiseYourVoice.Api.Controllers
         [Authorize]
         public async Task<ActionResult<IEnumerable<Notification>>> GetUserNotifications()
         {
-            var userId = User.Identity.Name;
+            var userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
             var allNotifications = await _notificationRepository.GetAllAsync();
             
             // Filter notifications relevant to the current user
@@ -63,7 +63,7 @@ namespace RaiseYourVoice.Api.Controllers
         {
             notification.CreatedAt = DateTime.UtcNow;
             notification.SentAt = DateTime.UtcNow;
-            notification.SentBy = User.Identity.Name;
+            notification.SentBy = User.Identity?.Name ?? "system";
             notification.DeliveryStatus = DeliveryStatus.Sent;
             notification.ReadStatus = ReadStatus.Unread;
             
@@ -139,7 +139,7 @@ namespace RaiseYourVoice.Api.Controllers
             // Set up a broadcast notification
             notification.CreatedAt = DateTime.UtcNow;
             notification.SentAt = DateTime.UtcNow;
-            notification.SentBy = User.Identity.Name;
+            notification.SentBy = User.Identity?.Name ?? "system";
             notification.DeliveryStatus = DeliveryStatus.Sent;
             notification.ReadStatus = ReadStatus.Unread;
             
@@ -163,7 +163,7 @@ namespace RaiseYourVoice.Api.Controllers
         [Authorize]
         public async Task<IActionResult> RegisterDeviceToken(DeviceTokenRequest request)
         {
-            string userId = User.Identity.Name;
+            string userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
             await _pushNotificationService.RegisterDeviceTokenAsync(userId, request.DeviceToken, request.DeviceType);
             return Ok();
         }
@@ -172,7 +172,7 @@ namespace RaiseYourVoice.Api.Controllers
         [Authorize]
         public async Task<IActionResult> RemoveDeviceToken(string token)
         {
-            string userId = User.Identity.Name;
+            string userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
             await _pushNotificationService.RemoveDeviceTokenAsync(userId, token);
             return Ok();
         }

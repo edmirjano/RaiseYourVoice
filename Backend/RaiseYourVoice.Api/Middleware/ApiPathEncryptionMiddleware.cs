@@ -62,8 +62,14 @@ namespace RaiseYourVoice.Api.Middleware
         /// <summary>
         /// Decodes an encrypted API path
         /// </summary>
-        private PathString? DecodeApiPath(string encryptedPath)
+        private PathString? DecodeApiPath(string? encryptedPath)
         {
+            // Return null if path is null
+            if (encryptedPath == null)
+            {
+                return null;
+            }
+            
             // First check if this is in our static mapping
             var normalizedPath = encryptedPath.ToLowerInvariant();
             if (_pathMappings.TryGetValue(normalizedPath, out var mappedPath))
@@ -159,7 +165,7 @@ namespace RaiseYourVoice.Api.Middleware
         /// <summary>
         /// Static mappings for encrypted paths to real paths
         /// </summary>
-        public List<ApiPathMapping> PathMappings { get; set; }
+        public List<ApiPathMapping> PathMappings { get; set; } = new List<ApiPathMapping>();
     }
 
     /// <summary>
@@ -167,7 +173,7 @@ namespace RaiseYourVoice.Api.Middleware
     /// </summary>
     public class ApiPathMapping
     {
-        public string EncryptedPath { get; set; }
-        public string RealPath { get; set; }
+        public required string EncryptedPath { get; set; }
+        public required string RealPath { get; set; }
     }
 }

@@ -57,7 +57,7 @@ namespace RaiseYourVoice.Api.Controllers
             }
 
             // Set the author ID from the authenticated user
-            comment.AuthorId = User.Identity.Name;
+            comment.AuthorId = User.Identity?.Name ?? string.Empty;
             comment.CreatedAt = DateTime.UtcNow;
             
             await _commentRepository.AddAsync(comment);
@@ -85,7 +85,7 @@ namespace RaiseYourVoice.Api.Controllers
                 return NotFound();
             }
             
-            if (existingComment.AuthorId != User.Identity.Name && 
+            if (existingComment.AuthorId != User.Identity?.Name && 
                 !User.IsInRole("Admin") && 
                 !User.IsInRole("Moderator"))
             {
@@ -113,7 +113,7 @@ namespace RaiseYourVoice.Api.Controllers
             }
             
             // Check if user is the author or an admin/moderator
-            if (comment.AuthorId != User.Identity.Name && 
+            if (comment.AuthorId != User.Identity?.Name && 
                 !User.IsInRole("Admin") && 
                 !User.IsInRole("Moderator"))
             {

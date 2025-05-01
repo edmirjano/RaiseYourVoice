@@ -1,5 +1,28 @@
 # Changelog
 
+## [Null Reference Exception Fixes] - 2025-05-01 23:45
+
+### Fixed
+- Fixed potential null reference exceptions across multiple controllers:
+  - Added null conditional operator (`?.`) and null coalescing with exception throwing in `User.Identity?.Name` calls
+  - Updated `AuthController`, `CampaignsController`, `CommentsController`, `DonationsController`, `NotificationsController`, and `PostsController`
+  - Replaced direct property access with null-safe patterns to prevent runtime exceptions
+  - Added explicit error messages in the UnauthorizedAccessException when authentication fails
+- Fixed nullable parameter handling in `ApiPathEncryptionMiddleware`:
+  - Added null check for `encryptedPath` parameter before processing
+  - Improved error handling for null path segments
+- Added required modifier to properties in `ApiPathMapping` class:
+  - Added `required` keyword to `EncryptedPath` and `RealPath` properties
+  - Ensures proper initialization of mapping objects
+- Fixed nullable type handling in controller parameters:
+  - Added nullable annotation (`?`) to `object` parameter in `SuccessWithLocalizedMessage`
+
+### Improved
+- Enhanced error messages when authentication fails with descriptive UnauthorizedAccessException
+- Strengthened null safety across the authentication flow
+- Improved code robustness in middleware and controller components
+- Reduced risk of runtime exceptions from null references
+
 ## [Build Warning Fixes] - 2025-05-01 23:30
 
 ### Fixed

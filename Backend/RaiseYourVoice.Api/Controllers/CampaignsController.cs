@@ -64,7 +64,7 @@ namespace RaiseYourVoice.Api.Controllers
             try
             {
                 // Check if the authenticated user belongs to the organization
-                string userId = User.Identity.Name;
+                string userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
                 
                 // In a real implementation, verify that the user belongs to the organization
                 // and has permission to create campaigns for it
