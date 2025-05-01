@@ -80,10 +80,11 @@ namespace RaiseYourVoice.Infrastructure
             // Configure key rotation
             services.Configure<KeyRotationOptions>(options =>
             {
-                options.RotationIntervalDays = Convert.ToInt32(configuration.GetSection("KeyRotationSettings:RotationIntervalDays").Value ?? "30");
-                options.KeyGracePeriodDays = Convert.ToInt32(configuration.GetSection("KeyRotationSettings:KeyGracePeriodDays").Value ?? "7");
-                options.AutomaticRotation = Convert.ToBoolean(configuration.GetSection("KeyRotationSettings:AutomaticRotation").Value ?? "true");
-                options.RotationCheckIntervalHours = Convert.ToInt32(configuration.GetSection("KeyRotationSettings:RotationCheckIntervalHours").Value ?? "24");
+                var rotationSection = configuration.GetSection("KeyRotationSettings");
+                options.RotationIntervalDays = rotationSection.GetValue<int?>("RotationIntervalDays") ?? 30;
+                options.KeyGracePeriodDays = rotationSection.GetValue<int?>("KeyGracePeriodDays") ?? 7;
+                options.AutomaticRotation = rotationSection.GetValue<bool>("AutomaticRotation", true);
+                options.RotationCheckIntervalHours = rotationSection.GetValue<int?>("RotationCheckIntervalHours") ?? 24;
             });
 
             services.AddHostedService<KeyRotationBackgroundService>();

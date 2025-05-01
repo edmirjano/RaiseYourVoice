@@ -148,6 +148,7 @@ builder.Services.AddAuthentication(options =>
 // Add API rate limiting
 builder.Services.AddRateLimiter(options =>
 {
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddFixedWindowLimiter("fixed", options =>
     {
         options.PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100");
@@ -156,13 +157,23 @@ builder.Services.AddRateLimiter(options =>
         options.QueueLimit = 0; // No queuing, just reject when limit is hit
     });
     
-    options.GlobalLimiter = options.CreateLimiter("fixed");
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: "fixed",
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100"),
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            })
+    );
 });
 
 // Configure Health Checks
 builder.Services.AddHealthChecks()
     .AddMongoDb(
-        mongodbConnectionString: builder.Configuration["MongoDbSettings:ConnectionString"] ?? throw new InvalidOperationException("MongoDB connection string is not configured."),
+        connectionString: builder.Configuration["MongoDbSettings:ConnectionString"] ?? throw new InvalidOperationException("MongoDB connection string is not configured."),
         name: "mongodb",
         failureStatus: HealthStatus.Degraded,
         tags: new[] { "db", "mongodb" })

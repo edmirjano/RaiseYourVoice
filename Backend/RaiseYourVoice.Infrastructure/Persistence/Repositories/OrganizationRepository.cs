@@ -4,7 +4,7 @@ using RaiseYourVoice.Domain.Enums;
 
 namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {
-    public class OrganizationRepository : MongoGenericRepository<Organization>
+    public class OrganizationRepository : MongoRepository<Organization>
     {
         public OrganizationRepository(MongoDbContext context) : base(context, "Organizations")
         {

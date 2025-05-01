@@ -7,7 +7,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {
     public class MongoRepository<T> : IGenericRepository<T> where T : BaseEntity
     {
-        private readonly IMongoCollection<T> _collection;
+        protected readonly IMongoCollection<T> _collection;
 
         public MongoRepository(MongoDbContext context, string collectionName)
         {

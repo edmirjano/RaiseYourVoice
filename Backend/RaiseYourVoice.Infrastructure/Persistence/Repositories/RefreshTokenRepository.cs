@@ -4,11 +4,14 @@ using RaiseYourVoice.Domain.Entities;
 
 namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {
-    public class RefreshTokenRepository : MongoGenericRepository<RefreshToken>, IRefreshTokenRepository
+    public class RefreshTokenRepository : MongoRepository<RefreshToken>, IRefreshTokenRepository
     {
+        protected readonly IMongoCollection<RefreshToken> _collection;
+        
         public RefreshTokenRepository(MongoDbContext context) 
             : base(context, "RefreshTokens")
         {
+            _collection = context.Database.GetCollection<RefreshToken>("RefreshTokens");
         }
 
         public async Task<RefreshToken> GetByTokenAsync(string token)

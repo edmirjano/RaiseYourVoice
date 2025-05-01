@@ -1,5 +1,23 @@
 # Changelog
 
+## [Repository Structure Fix & MongoDB Integration] - 2025-05-01 21:15
+
+### Fixed
+- Fixed the repository class structure issue:
+  - Changed `MongoGenericRepository<T>` references to correct `MongoRepository<T>` in all repository classes
+  - Updated access modifiers in `MongoRepository<T>` to make `_collection` protected instead of private
+  - Fixed inheritance in `EncryptionKeyRepository`, `OrganizationRepository`, and `RefreshTokenRepository`
+- Updated `InfrastructureServiceRegistration.cs` to register the correct repository implementations
+- Fixed rate limiting configuration in Program.cs:
+  - Removed invalid reference to `Microsoft.AspNetCore.RateLimiting` version 9.0.0 (doesn't exist)
+  - Updated to use the built-in ASP.NET Core rate limiting functionality 
+- Updated `StripePaymentGateway` implementation to match the current `PaymentRequest` model
+- Added automatic ID generation to `BaseEntity` using MongoDB.Bson's ObjectId.GenerateNewId()
+
+### Dependencies
+- Added MongoDB.Bson reference to the Domain project to support ObjectId generation
+- Added MongoDB.Driver reference to the Infrastructure project for MongoDB repository implementation
+
 ## [Interface Implementations & Backend Fixes] - 2025-05-01 19:30
 
 ### Fixed

@@ -2,8 +2,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Application.Models.Requests;
-using RaiseYourVoice.Application.Models.Responses;
+using RaiseYourVoice.Domain.Entities;
+using RaiseYourVoice.Domain.Enums;
 using Stripe;
+using System.Text.Json;
+using MongoDB.Bson;
 
 namespace RaiseYourVoice.Infrastructure.Services
 {
@@ -23,7 +26,7 @@ namespace RaiseYourVoice.Infrastructure.Services
             StripeConfiguration.ApiKey = _stripeSettings.SecretKey;
         }
 
-        public async Task<PaymentResponse> ProcessPaymentAsync(PaymentRequest request)
+        public async Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request)
         {
             try
             {
@@ -33,135 +36,210 @@ namespace RaiseYourVoice.Infrastructure.Services
                     Amount = ConvertToStripeAmount(request.Amount, request.Currency),
                     Currency = request.Currency.ToLower(),
                     Description = request.Description,
-                    PaymentMethod = request.PaymentMethodId,
+                    PaymentMethod = request.PaymentMethod.TokenId,
                     ConfirmationMethod = "automatic",
                     Confirm = true,
-                    ReturnUrl = request.ReturnUrl,
-                    ReceiptEmail = request.Email,
+                    ReceiptEmail = request.CustomerInfo?.Email,
                     Metadata = new Dictionary<string, string>
                     {
-                        { "campaignId", request.CampaignId },
-                        { "userId", request.UserId ?? "anonymous" },
-                        { "isAnonymous", request.IsAnonymous.ToString() }
+                        { "campaignId", request.CampaignId }
                     }
                 };
 
                 var service = new PaymentIntentService();
                 var paymentIntent = await service.CreateAsync(options);
                 
-                return new PaymentResponse
+                return new PaymentResult
                 {
                     Success = paymentIntent.Status == "succeeded",
                     TransactionId = paymentIntent.Id,
-                    Status = TranslateStripeStatus(paymentIntent.Status),
-                    RedirectUrl = paymentIntent.NextAction?.RedirectToUrl?.Url,
+                    Status = TranslateToPaymentStatus(paymentIntent.Status),
+                    ReceiptUrl = null, // Stripe's PaymentIntent doesn't directly provide receipt URL
+                    CustomerId = paymentIntent.CustomerId,
+                    PaymentMethodId = paymentIntent.PaymentMethodId,
                     ErrorMessage = null
                 };
             }
             catch (StripeException ex)
             {
                 _logger.LogError(ex, "Stripe error processing payment: {Message}", ex.Message);
-                return new PaymentResponse
+                return new PaymentResult
                 {
                     Success = false,
                     TransactionId = null,
-                    Status = "failed",
-                    RedirectUrl = null,
+                    Status = PaymentStatus.Failed,
                     ErrorMessage = ex.Message
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing payment: {Message}", ex.Message);
-                return new PaymentResponse
+                return new PaymentResult
                 {
                     Success = false,
                     TransactionId = null,
-                    Status = "failed",
-                    RedirectUrl = null,
+                    Status = PaymentStatus.Failed,
                     ErrorMessage = "An unexpected error occurred"
                 };
             }
         }
 
-        public async Task<PaymentResponse> ProcessRefundAsync(string transactionId, decimal amount, string currency)
+        public async Task<PaymentResult> RefundPaymentAsync(string transactionId, decimal amount, string reason)
         {
             try
             {
                 var options = new RefundCreateOptions
                 {
                     PaymentIntent = transactionId,
-                    Amount = ConvertToStripeAmount(amount, currency)
+                    Amount = ConvertToStripeAmount(amount, "usd"), // Default to USD
+                    Reason = TranslateRefundReason(reason)
                 };
                 
                 var service = new RefundService();
                 var refund = await service.CreateAsync(options);
                 
-                return new PaymentResponse
+                return new PaymentResult
                 {
                     Success = refund.Status == "succeeded",
                     TransactionId = refund.Id,
-                    Status = TranslateStripeRefundStatus(refund.Status),
-                    RedirectUrl = null,
+                    Status = TranslateToPaymentStatus(refund.Status),
                     ErrorMessage = null
                 };
             }
             catch (StripeException ex)
             {
                 _logger.LogError(ex, "Stripe error processing refund: {Message}", ex.Message);
-                return new PaymentResponse
+                return new PaymentResult
                 {
                     Success = false,
                     TransactionId = null,
-                    Status = "failed",
-                    RedirectUrl = null,
+                    Status = PaymentStatus.Failed,
                     ErrorMessage = ex.Message
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing refund: {Message}", ex.Message);
-                return new PaymentResponse
+                return new PaymentResult
                 {
                     Success = false,
                     TransactionId = null,
-                    Status = "failed",
-                    RedirectUrl = null,
+                    Status = PaymentStatus.Failed,
                     ErrorMessage = "An unexpected error occurred"
                 };
             }
         }
 
-        public async Task<SubscriptionResponse> CreateSubscriptionAsync(SubscriptionRequest request)
+        public async Task<string> CreateCustomerAsync(DonorInformation customerInfo)
         {
             try
             {
-                // First, check if we need to create a customer
-                string customerId = request.CustomerId;
-                
-                if (string.IsNullOrEmpty(customerId))
+                var customerOptions = new CustomerCreateOptions
                 {
-                    var customerOptions = new CustomerCreateOptions
+                    Email = customerInfo.Email,
+                    Name = customerInfo.FullName,
+                    Metadata = new Dictionary<string, string>
                     {
-                        Email = request.Email,
-                        Name = request.Name,
-                        PaymentMethod = request.PaymentMethodId,
-                        InvoiceSettings = new CustomerInvoiceSettingsOptions
-                        {
-                            DefaultPaymentMethod = request.PaymentMethodId,
-                        },
-                        Metadata = new Dictionary<string, string>
-                        {
-                            { "userId", request.UserId ?? "anonymous" }
-                        }
+                        { "userId", ObjectId.GenerateNewId().ToString() }
+                    }
+                };
+                
+                if (customerInfo.Address != null)
+                {
+                    customerOptions.Address = new AddressOptions
+                    {
+                        Line1 = customerInfo.Address,
+                        City = customerInfo.City,
+                        State = customerInfo.State,
+                        PostalCode = customerInfo.PostalCode,
+                        Country = customerInfo.Country
                     };
-                    
-                    var customerService = new CustomerService();
-                    var customer = await customerService.CreateAsync(customerOptions);
-                    customerId = customer.Id;
                 }
+                
+                var customerService = new CustomerService();
+                var customer = await customerService.CreateAsync(customerOptions);
+                return customer.Id;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating Stripe customer: {Message}", ex.Message);
+                throw;
+            }
+        }
 
-                // Then create the subscription
+        public async Task<string> SavePaymentMethodAsync(string customerId, PaymentMethodInfo paymentMethod)
+        {
+            try
+            {
+                // Create a payment method
+                var paymentMethodOptions = new PaymentMethodCreateOptions
+                {
+                    Type = paymentMethod.Type,
+                    Card = new PaymentMethodCardOptions
+                    {
+                        Number = paymentMethod.CardNumber,
+                        ExpMonth = int.Parse(paymentMethod.ExpiryMonth),
+                        ExpYear = int.Parse(paymentMethod.ExpiryYear),
+                        Cvc = paymentMethod.Cvc
+                    },
+                    BillingDetails = new PaymentMethodBillingDetailsOptions
+                    {
+                        Name = paymentMethod.CardholderName
+                    }
+                };
+                
+                var paymentMethodService = new PaymentMethodService();
+                var createdPaymentMethod = await paymentMethodService.CreateAsync(paymentMethodOptions);
+                
+                // Attach the payment method to the customer
+                var attachOptions = new PaymentMethodAttachOptions
+                {
+                    Customer = customerId
+                };
+                
+                await paymentMethodService.AttachAsync(createdPaymentMethod.Id, attachOptions);
+                
+                return createdPaymentMethod.Id;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving payment method: {Message}", ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<string> CreateSubscriptionAsync(string customerId, string paymentMethodId, decimal amount, string description)
+        {
+            try
+            {
+                // Create or retrieve a price for the subscription
+                var priceService = new PriceService();
+                var priceOptions = new PriceCreateOptions
+                {
+                    UnitAmount = ConvertToStripeAmount(amount, "usd"),
+                    Currency = "usd",
+                    Recurring = new PriceRecurringOptions
+                    {
+                        Interval = "month"
+                    },
+                    Product = await GetOrCreateProductId(description)
+                };
+                
+                var price = await priceService.CreateAsync(priceOptions);
+                
+                // Set the default payment method for the customer
+                var customerService = new CustomerService();
+                var customerUpdateOptions = new CustomerUpdateOptions
+                {
+                    InvoiceSettings = new CustomerInvoiceSettingsOptions
+                    {
+                        DefaultPaymentMethod = paymentMethodId
+                    }
+                };
+                
+                await customerService.UpdateAsync(customerId, customerUpdateOptions);
+                
+                // Create the subscription
                 var subscriptionOptions = new SubscriptionCreateOptions
                 {
                     Customer = customerId,
@@ -169,60 +247,28 @@ namespace RaiseYourVoice.Infrastructure.Services
                     {
                         new SubscriptionItemOptions
                         {
-                            Price = request.PriceId,
+                            Price = price.Id,
                         },
                     },
-                    PaymentBehavior = "default_incomplete",
                     PaymentSettings = new SubscriptionPaymentSettingsOptions
                     {
-                        SaveDefaultPaymentMethod = "on_subscription",
+                        SaveDefaultPaymentMethod = "on_subscription"
                     },
-                    TrialPeriodDays = request.TrialPeriodDays,
                     Metadata = new Dictionary<string, string>
                     {
-                        { "campaignId", request.CampaignId },
-                        { "userId", request.UserId ?? "anonymous" }
+                        { "description", description }
                     }
                 };
 
-                var service = new SubscriptionService();
-                var subscription = await service.CreateAsync(subscriptionOptions);
+                var subscriptionService = new SubscriptionService();
+                var subscription = await subscriptionService.CreateAsync(subscriptionOptions);
                 
-                return new SubscriptionResponse
-                {
-                    Success = true,
-                    SubscriptionId = subscription.Id,
-                    CustomerId = customerId,
-                    Status = TranslateStripeSubscriptionStatus(subscription.Status),
-                    CurrentPeriodEnd = subscription.CurrentPeriodEnd,
-                    ClientSecret = subscription.LatestInvoice?.PaymentIntent?.ClientSecret,
-                    InvoiceUrl = subscription.LatestInvoice?.HostedInvoiceUrl,
-                    ErrorMessage = null
-                };
-            }
-            catch (StripeException ex)
-            {
-                _logger.LogError(ex, "Stripe error creating subscription: {Message}", ex.Message);
-                return new SubscriptionResponse
-                {
-                    Success = false,
-                    SubscriptionId = null,
-                    CustomerId = null,
-                    Status = "failed",
-                    ErrorMessage = ex.Message
-                };
+                return subscription.Id;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating subscription: {Message}", ex.Message);
-                return new SubscriptionResponse
-                {
-                    Success = false,
-                    SubscriptionId = null,
-                    CustomerId = null,
-                    Status = "failed",
-                    ErrorMessage = "An unexpected error occurred"
-                };
+                throw;
             }
         }
 
@@ -241,60 +287,74 @@ namespace RaiseYourVoice.Infrastructure.Services
             }
         }
 
+        public async Task<PaymentStatus> GetPaymentStatusAsync(string transactionId)
+        {
+            try
+            {
+                var service = new PaymentIntentService();
+                var paymentIntent = await service.GetAsync(transactionId);
+                
+                return TranslateToPaymentStatus(paymentIntent.Status);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving payment status: {Message}", ex.Message);
+                throw;
+            }
+        }
+
+        private async Task<string> GetOrCreateProductId(string description)
+        {
+            // Create a simple product for the subscription
+            var productName = "Monthly Donation";
+            var productService = new ProductService();
+            var productOptions = new ProductCreateOptions
+            {
+                Name = productName,
+                Description = description
+            };
+            
+            var product = await productService.CreateAsync(productOptions);
+            return product.Id;
+        }
+
         private long ConvertToStripeAmount(decimal amount, string currency)
         {
             // Stripe requires amounts to be in the smallest currency unit (e.g. cents for USD)
             return Convert.ToInt64(amount * 100);
         }
 
-        private string TranslateStripeStatus(string stripeStatus)
+        private PaymentStatus TranslateToPaymentStatus(string stripeStatus)
         {
             return stripeStatus switch
             {
-                "succeeded" => "completed",
-                "processing" => "processing",
-                "requires_payment_method" => "failed",
-                "requires_action" => "pending",
-                "requires_confirmation" => "pending",
-                "requires_capture" => "pending",
-                "canceled" => "cancelled",
-                _ => "pending"
+                "succeeded" => PaymentStatus.Completed,
+                "processing" => PaymentStatus.Pending, // Assuming Pending exists in your enum
+                "requires_payment_method" => PaymentStatus.Failed,
+                "requires_action" => PaymentStatus.Pending,
+                "requires_confirmation" => PaymentStatus.Pending,
+                "requires_capture" => PaymentStatus.Pending,
+                "canceled" => PaymentStatus.Cancelled,
+                _ => PaymentStatus.Pending
             };
         }
 
-        private string TranslateStripeRefundStatus(string stripeStatus)
+        private string TranslateRefundReason(string reason)
         {
-            return stripeStatus switch
+            return reason.ToLower() switch
             {
-                "succeeded" => "refunded",
-                "pending" => "processing",
-                "failed" => "failed",
-                "canceled" => "cancelled",
-                _ => "pending"
-            };
-        }
-
-        private string TranslateStripeSubscriptionStatus(string stripeStatus)
-        {
-            return stripeStatus switch
-            {
-                "active" => "active",
-                "past_due" => "past_due",
-                "unpaid" => "unpaid",
-                "canceled" => "cancelled",
-                "incomplete" => "incomplete",
-                "incomplete_expired" => "failed",
-                "trialing" => "trial",
-                "paused" => "paused",
-                _ => "pending"
+                "requested_by_customer" => "requested_by_customer",
+                "duplicate" => "duplicate",
+                "fraudulent" => "fraudulent",
+                _ => "other"
             };
         }
     }
 
     public class StripeSettings
     {
-        public string SecretKey { get; set; }
-        public string PublishableKey { get; set; }
-        public string WebhookSecret { get; set; }
+        public string SecretKey { get; set; } = string.Empty;
+        public string PublishableKey { get; set; } = string.Empty;
+        public string WebhookSecret { get; set; } = string.Empty;
     }
 }

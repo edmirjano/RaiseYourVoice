@@ -165,6 +165,8 @@ namespace RaiseYourVoice.Infrastructure.Services
         private EncryptionKey GenerateEncryptionKey(string purpose, int version)
         {
             byte[] keyBytes;
+            byte[] ivBytes;
+            string algorithm;
             
             // Different key generation based on purpose
             switch (purpose)
@@ -173,28 +175,36 @@ namespace RaiseYourVoice.Infrastructure.Services
                     // For JWT signing, use asymmetric algorithm
                     using (var rsa = RSA.Create(2048))
                     {
-                        return new EncryptionKey
-                        {
-                            Purpose = purpose,
-                            Version = version,
-                            KeyData = Convert.ToBase64String(rsa.ExportRSAPrivateKey()),
-                            PublicKeyData = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
-                            Algorithm = "RSA-2048",
-                            IsActive = true,
-                            CreatedAt = DateTime.UtcNow
-                        };
+                        keyBytes = rsa.ExportRSAPrivateKey();
+                        ivBytes = rsa.ExportRSAPublicKey(); // Store public key as IV
+                        algorithm = "RSA-2048";
+                        break;
                     }
                 
                 case "ApiPathEncryption":
                     // For API path encryption, use 128-bit key (shorter for URL efficiency)
-                    keyBytes = new byte[16];
-                    RandomNumberGenerator.Fill(keyBytes);
+                    using (var aes = Aes.Create())
+                    {
+                        aes.KeySize = 128;
+                        aes.GenerateKey();
+                        aes.GenerateIV();
+                        keyBytes = aes.Key;
+                        ivBytes = aes.IV;
+                        algorithm = "AES-128";
+                    }
                     break;
                 
                 default:
                     // For data encryption, use 256-bit key
-                    keyBytes = new byte[32];
-                    RandomNumberGenerator.Fill(keyBytes);
+                    using (var aes = Aes.Create())
+                    {
+                        aes.KeySize = 256;
+                        aes.GenerateKey();
+                        aes.GenerateIV();
+                        keyBytes = aes.Key;
+                        ivBytes = aes.IV;
+                        algorithm = "AES-256";
+                    }
                     break;
             }
             
@@ -202,10 +212,14 @@ namespace RaiseYourVoice.Infrastructure.Services
             {
                 Purpose = purpose,
                 Version = version,
-                KeyData = Convert.ToBase64String(keyBytes),
-                Algorithm = purpose == "ApiPathEncryption" ? "AES-128" : "AES-256",
+                Key = Convert.ToBase64String(keyBytes),
+                IV = Convert.ToBase64String(ivBytes),
+                KeyCreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+                ActivatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(_options.RotationIntervalDays ?? 30),
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                Description = $"{algorithm} key created on {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}"
             };
         }
 
