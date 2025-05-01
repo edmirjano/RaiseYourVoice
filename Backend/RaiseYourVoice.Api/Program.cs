@@ -7,6 +7,7 @@ using RaiseYourVoice.Api.Middleware;
 using RaiseYourVoice.Infrastructure.Services.Security;
 using RaiseYourVoice.Infrastructure.Persistence;
 using RaiseYourVoice.Infrastructure.Security;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -147,24 +148,30 @@ builder.Services.AddAuthentication(options =>
 // Add API rate limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = Microsoft.AspNetCore.RateLimiting.PartitionedRateLimiter.Create<Microsoft.AspNetCore.Http.HttpContext, string>(httpContext =>
-        Microsoft.AspNetCore.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
-            factory: _ => new Microsoft.AspNetCore.RateLimiting.FixedWindowRateLimiterOptions
-            {
-                PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100"),
-                Window = TimeSpan.FromMinutes(1),
-                QueueProcessingOrder = Microsoft.AspNetCore.RateLimiting.QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            }));
+    options.GlobalLimiter = Microsoft.AspNetCore.RateLimiting.PartitionedRateLimiter.CreateTokenBucketLimiter<string>(partitionKey =>
+        new Microsoft.AspNetCore.RateLimiting.TokenBucketRateLimiterOptions
+        {
+            TokenLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100"),
+            QueueProcessingOrder = Microsoft.AspNetCore.RateLimiting.QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0,
+            ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+            TokensPerPeriod = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100"),
+            AutoReplenishment = true
+        });
 });
 
 // Configure Health Checks
 builder.Services.AddHealthChecks()
-    .AddMongoDb(builder.Configuration["MongoDbSettings:ConnectionString"] 
-        ?? throw new InvalidOperationException("MongoDB connection string is not configured."))
-    .AddRedis(builder.Configuration.GetConnectionString("RedisConnection") 
-        ?? throw new InvalidOperationException("Redis connection string is not configured."));
+    .AddMongoDb(
+        mongodbConnectionString: builder.Configuration["MongoDbSettings:ConnectionString"] ?? throw new InvalidOperationException("MongoDB connection string is not configured."),
+        name: "mongodb",
+        failureStatus: HealthStatus.Degraded,
+        tags: new[] { "db", "mongodb" })
+    .AddRedis(
+        redisConnectionString: builder.Configuration.GetConnectionString("RedisConnection") ?? throw new InvalidOperationException("Redis connection string is not configured."),
+        name: "redis",
+        failureStatus: HealthStatus.Degraded,
+        tags: new[] { "cache", "redis" });
 
 var app = builder.Build();
 

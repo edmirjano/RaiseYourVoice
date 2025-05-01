@@ -4,97 +4,61 @@ using RaiseYourVoice.Domain.Entities;
 
 namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {
-    public class EncryptionKeyRepository : MongoRepository<EncryptionKey>, IEncryptionKeyRepository
+    public class EncryptionKeyRepository : MongoGenericRepository<EncryptionKey>, IEncryptionKeyRepository
     {
-        private readonly IMongoCollection<EncryptionKey> _encryptionKeys;
-
-        public EncryptionKeyRepository(MongoDbContext context) : base(context)
+        public EncryptionKeyRepository(MongoDbContext context) 
+            : base(context, "EncryptionKeys")
         {
-            _encryptionKeys = context.Database.GetCollection<EncryptionKey>("EncryptionKeys");
         }
 
-        public async Task<EncryptionKey> GetActiveKeyAsync(string purpose)
+        public async Task<EncryptionKey> GetActiveKeyByPurposeAsync(string purpose)
         {
-            return await _encryptionKeys.Find(k => 
-                k.Purpose == purpose && 
-                k.IsActive && 
-                k.ActivatedAt <= DateTime.UtcNow && 
-                k.ExpiresAt > DateTime.UtcNow)
-                .FirstOrDefaultAsync();
+            return await _collection.Find(k => k.Purpose == purpose && k.IsActive).FirstOrDefaultAsync();
         }
 
-        public async Task<EncryptionKey> GetKeyByVersionAsync(int version, string purpose)
+        public async Task<IEnumerable<EncryptionKey>> GetKeysByPurposeAsync(string purpose)
         {
-            return await _encryptionKeys.Find(k => 
-                k.Version == version && 
-                k.Purpose == purpose)
-                .FirstOrDefaultAsync();
+            return await _collection.Find(k => k.Purpose == purpose).ToListAsync();
         }
 
-        public async Task<List<EncryptionKey>> GetKeysByPurposeAsync(string purpose, bool includeExpired = false)
+        public async Task<IEnumerable<EncryptionKey>> GetExpiredKeysAsync()
         {
-            var builder = Builders<EncryptionKey>.Filter;
-            var filter = builder.Eq(k => k.Purpose, purpose);
+            var now = DateTime.UtcNow;
+            return await _collection.Find(k => k.ExpiresAt != null && k.ExpiresAt < now).ToListAsync();
+        }
 
-            if (!includeExpired)
-            {
-                filter = filter & builder.Gt(k => k.ExpiresAt, DateTime.UtcNow);
-            }
+        public async Task<EncryptionKey> GetKeyByVersionAsync(string purpose, int version)
+        {
+            return await _collection.Find(k => k.Purpose == purpose && k.Version == version).FirstOrDefaultAsync();
+        }
 
-            return await _encryptionKeys.Find(filter)
+        public async Task<int> GetLatestVersionByPurposeAsync(string purpose)
+        {
+            var key = await _collection.Find(k => k.Purpose == purpose)
                 .SortByDescending(k => k.Version)
-                .ToListAsync();
-        }
-
-        public async Task<bool> ActivateKeyAsync(string keyId, string purpose)
-        {
-            // Start a transaction
-            using var session = await _encryptionKeys.Database.Client.StartSessionAsync();
-            session.StartTransaction();
-
-            try
-            {
-                // Deactivate all keys with the same purpose
-                var deactivateFilter = Builders<EncryptionKey>.Filter.Eq(k => k.Purpose, purpose);
-                var deactivateUpdate = Builders<EncryptionKey>.Update.Set(k => k.IsActive, false);
-                
-                await _encryptionKeys.UpdateManyAsync(
-                    session,
-                    deactivateFilter,
-                    deactivateUpdate);
-
-                // Activate the specified key
-                var activateFilter = Builders<EncryptionKey>.Filter.Eq(k => k.Id, keyId);
-                var activateUpdate = Builders<EncryptionKey>.Update
-                    .Set(k => k.IsActive, true)
-                    .Set(k => k.ActivatedAt, DateTime.UtcNow);
-                
-                var result = await _encryptionKeys.UpdateOneAsync(
-                    session,
-                    activateFilter,
-                    activateUpdate);
-
-                // Commit the transaction
-                await session.CommitTransactionAsync();
-                
-                return result.ModifiedCount > 0;
-            }
-            catch
-            {
-                // Abort the transaction on error
-                await session.AbortTransactionAsync();
-                throw;
-            }
-        }
-
-        public async Task<int> GetHighestVersionAsync(string purpose)
-        {
-            var highestVersionKey = await _encryptionKeys.Find(k => k.Purpose == purpose)
-                .SortByDescending(k => k.Version)
-                .Limit(1)
                 .FirstOrDefaultAsync();
+                
+            return key?.Version ?? 0;
+        }
 
-            return highestVersionKey?.Version ?? 0;
+        public async Task<bool> DeactivateKeyAsync(string id)
+        {
+            var update = Builders<EncryptionKey>.Update
+                .Set(k => k.IsActive, false)
+                .Set(k => k.UpdatedAt, DateTime.UtcNow);
+                
+            var result = await _collection.UpdateOneAsync(k => k.Id == id, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
+
+        public async Task<bool> DeactivateAllKeysByPurposeAsync(string purpose)
+        {
+            var update = Builders<EncryptionKey>.Update
+                .Set(k => k.IsActive, false)
+                .Set(k => k.UpdatedAt, DateTime.UtcNow);
+                
+            var result = await _collection.UpdateManyAsync(k => k.Purpose == purpose && k.IsActive, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
         }
     }
 }

@@ -47,13 +47,13 @@ namespace RaiseYourVoice.Api.Middleware
             // Try to decode the path
             var decodedPath = DecodeApiPath(originalPath);
             
-            if (decodedPath != null)
+            if (decodedPath.HasValue)
             {
                 // Store original path for logging/debugging
                 context.Items["OriginalEncryptedPath"] = originalPath;
                 
                 // Rewrite the request path
-                context.Request.Path = decodedPath;
+                context.Request.Path = decodedPath.Value;
             }
 
             await _next(context);

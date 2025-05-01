@@ -12,95 +12,108 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 
         public async Task<IEnumerable<Donation>> GetByCampaignIdAsync(string campaignId)
         {
-            var filter = Builders<Donation>.Filter.Eq(d => d.CampaignId, campaignId);
-            return await _collection.Find(filter)
-                .SortByDescending(d => d.CreatedAt)
-                .ToListAsync();
+            return await _collection.Find(d => d.CampaignId == campaignId).ToListAsync();
         }
 
-        public async Task<IEnumerable<Donation>> GetByDonorIdAsync(string userId)
+        public async Task<IEnumerable<Donation>> GetByUserIdAsync(string userId)
         {
-            var filter = Builders<Donation>.Filter.Eq(d => d.DonorId, userId);
-            return await _collection.Find(filter)
-                .SortByDescending(d => d.CreatedAt)
-                .ToListAsync();
+            return await _collection.Find(d => d.UserId == userId).ToListAsync();
         }
 
-        public async Task<IEnumerable<Donation>> GetByStatusAsync(PaymentStatus status)
+        public async Task<IEnumerable<Donation>> GetByPaymentStatusAsync(PaymentStatus status)
         {
-            var filter = Builders<Donation>.Filter.Eq(d => d.Status, status);
-            return await _collection.Find(filter)
-                .SortByDescending(d => d.CreatedAt)
-                .ToListAsync();
+            return await _collection.Find(d => d.PaymentStatus == status).ToListAsync();
         }
 
-        public async Task<decimal> GetTotalDonationsByCampaignAsync(string campaignId)
+        public async Task<IEnumerable<Donation>> GetByTransactionIdAsync(string transactionId)
         {
-            var filter = Builders<Donation>.Filter.And(
-                Builders<Donation>.Filter.Eq(d => d.CampaignId, campaignId),
-                Builders<Donation>.Filter.Eq(d => d.Status, PaymentStatus.Completed)
-            );
-            
-            var donations = await _collection.Find(filter).ToListAsync();
-            return donations.Sum(d => d.Amount);
+            return await _collection.Find(d => d.TransactionId == transactionId).ToListAsync();
         }
 
-        public async Task<int> GetDonorCountByCampaignAsync(string campaignId)
+        public async Task<bool> UpdatePaymentStatusAsync(string id, PaymentStatus status)
         {
-            var filter = Builders<Donation>.Filter.And(
-                Builders<Donation>.Filter.Eq(d => d.CampaignId, campaignId),
-                Builders<Donation>.Filter.Eq(d => d.Status, PaymentStatus.Completed)
-            );
-            
-            return (int)(await _collection.DistinctAsync<string>(d => d.DonorId, filter)).ToList().Count;
-        }
-
-        public async Task<bool> UpdateDonationStatusAsync(string donationId, PaymentStatus status, string transactionId = null)
-        {
-            var filter = Builders<Donation>.Filter.Eq(d => d.Id, donationId);
             var update = Builders<Donation>.Update
-                .Set(d => d.Status, status)
+                .Set(d => d.PaymentStatus, status)
                 .Set(d => d.UpdatedAt, DateTime.UtcNow);
                 
-            if (!string.IsNullOrEmpty(transactionId))
-            {
-                update = update.Set(d => d.TransactionId, transactionId);
-            }
-            
-            var result = await _collection.UpdateOneAsync(filter, update);
+            var result = await _collection.UpdateOneAsync(d => d.Id == id, update);
             return result.IsAcknowledged && result.ModifiedCount > 0;
         }
 
-        public async Task<Dictionary<string, decimal>> GetDonationStatsByPeriodAsync(string campaignId, DateTime startDate, DateTime endDate)
+        public async Task<Dictionary<string, decimal>> GetDonationStatisticsByCampaignAsync(string campaignId)
         {
-            var filter = Builders<Donation>.Filter.And(
-                Builders<Donation>.Filter.Eq(d => d.CampaignId, campaignId),
-                Builders<Donation>.Filter.Eq(d => d.Status, PaymentStatus.Completed),
-                Builders<Donation>.Filter.Gte(d => d.CreatedAt, startDate),
-                Builders<Donation>.Filter.Lt(d => d.CreatedAt, endDate)
-            );
+            var donations = await _collection.Find(d => d.CampaignId == campaignId && d.PaymentStatus == PaymentStatus.Completed).ToListAsync();
             
-            var donations = await _collection.Find(filter).ToListAsync();
-            
-            // Group by date (day) and calculate sum for each day
-            var stats = donations
-                .GroupBy(d => d.CreatedAt.Date.ToString("yyyy-MM-dd"))
-                .ToDictionary(g => g.Key, g => g.Sum(d => d.Amount));
-                
-            return stats;
+            if (!donations.Any())
+            {
+                return new Dictionary<string, decimal>
+                {
+                    { "totalAmount", 0 },
+                    { "averageAmount", 0 },
+                    { "donorCount", 0 }
+                };
+            }
+
+            decimal totalAmount = donations.Sum(d => d.Amount);
+            int donorCount = donations.Select(d => d.UserId).Distinct().Count();
+            decimal averageAmount = donorCount > 0 ? totalAmount / donorCount : 0;
+
+            return new Dictionary<string, decimal>
+            {
+                { "totalAmount", totalAmount },
+                { "averageAmount", averageAmount },
+                { "donorCount", donorCount }
+            };
         }
 
-        public async Task<IEnumerable<Donation>> GetRecentDonationsAsync(string campaignId, int limit = 5)
+        public async Task<IEnumerable<Donation>> GetSubscriptionDonationsAsync(string subscriptionId)
         {
+            return await _collection.Find(d => d.IsSubscriptionDonation && d.SubscriptionId == subscriptionId).ToListAsync();
+        }
+
+        public async Task<Dictionary<string, object>> GetDonationInsightsAsync(DateTime? startDate, DateTime? endDate)
+        {
+            var start = startDate ?? DateTime.UtcNow.AddMonths(-1);
+            var end = endDate ?? DateTime.UtcNow;
+
             var filter = Builders<Donation>.Filter.And(
-                Builders<Donation>.Filter.Eq(d => d.CampaignId, campaignId),
-                Builders<Donation>.Filter.Eq(d => d.Status, PaymentStatus.Completed)
+                Builders<Donation>.Filter.Gte(d => d.CreatedAt, start),
+                Builders<Donation>.Filter.Lte(d => d.CreatedAt, end),
+                Builders<Donation>.Filter.Eq(d => d.PaymentStatus, PaymentStatus.Completed)
             );
-            
-            return await _collection.Find(filter)
-                .SortByDescending(d => d.CreatedAt)
-                .Limit(limit)
-                .ToListAsync();
+
+            var donations = await _collection.Find(filter).ToListAsync();
+
+            // Group donations by day
+            var donationsByDay = donations
+                .GroupBy(d => d.CreatedAt.Date)
+                .Select(g => new 
+                { 
+                    Date = g.Key.ToString("yyyy-MM-dd"),
+                    Count = g.Count(),
+                    Amount = g.Sum(d => d.Amount)
+                })
+                .OrderBy(g => g.Date)
+                .ToList();
+
+            // Calculate total amount, count, and average
+            var totalAmount = donations.Sum(d => d.Amount);
+            var totalCount = donations.Count;
+            var averageAmount = totalCount > 0 ? totalAmount / totalCount : 0;
+
+            // Calculate recurring vs one-time
+            var recurringCount = donations.Count(d => d.IsSubscriptionDonation);
+            var oneTimeCount = totalCount - recurringCount;
+
+            return new Dictionary<string, object>
+            {
+                { "totalAmount", totalAmount },
+                { "totalDonations", totalCount },
+                { "averageDonation", averageAmount },
+                { "recurringDonations", recurringCount },
+                { "oneTimeDonations", oneTimeCount },
+                { "donationsByDay", donationsByDay }
+            };
         }
     }
 }

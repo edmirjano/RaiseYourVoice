@@ -16,11 +16,19 @@ namespace RaiseYourVoice.Infrastructure
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
             // Configure MongoDB
-            services.Configure<MongoDbSettings>(configuration.GetSection("MongoDbSettings"));
+            services.Configure<MongoDbSettings>(options => 
+            {
+                options.ConnectionString = configuration.GetSection("MongoDbSettings:ConnectionString").Value;
+                options.DatabaseName = configuration.GetSection("MongoDbSettings:DatabaseName").Value;
+            });
+            
             services.AddSingleton<MongoDbContext>();
             services.AddSingleton<IMongoClient>(sp => 
             {
-                var settings = configuration.GetSection("MongoDbSettings").Get<MongoDbSettings>();
+                var settings = new MongoDbSettings
+                {
+                    ConnectionString = configuration.GetSection("MongoDbSettings:ConnectionString").Value
+                };
                 return new MongoClient(settings.ConnectionString);
             });
 
@@ -53,7 +61,13 @@ namespace RaiseYourVoice.Infrastructure
             services.AddSingleton<JwtKeyManager>();
 
             // Configure payment gateway
-            services.Configure<StripeSettings>(configuration.GetSection("Stripe"));
+            services.Configure<StripeSettings>(options =>
+            {
+                options.SecretKey = configuration.GetSection("Stripe:SecretKey").Value;
+                options.PublishableKey = configuration.GetSection("Stripe:PublishableKey").Value;
+                options.WebhookSecret = configuration.GetSection("Stripe:WebhookSecret").Value;
+            });
+            
             services.AddScoped<IPaymentGateway, StripePaymentGateway>();
 
             // Configure Redis for caching
@@ -64,7 +78,13 @@ namespace RaiseYourVoice.Infrastructure
             });
             
             // Configure key rotation
-            services.Configure<KeyRotationOptions>(configuration.GetSection("KeyRotationSettings"));
+            services.Configure<KeyRotationOptions>(options =>
+            {
+                options.RotationIntervalDays = Convert.ToInt32(configuration.GetSection("KeyRotationSettings:RotationIntervalDays").Value ?? "30");
+                options.KeyGracePeriodDays = Convert.ToInt32(configuration.GetSection("KeyRotationSettings:KeyGracePeriodDays").Value ?? "7");
+                options.AutomaticRotation = Convert.ToBoolean(configuration.GetSection("KeyRotationSettings:AutomaticRotation").Value ?? "true");
+            });
+
             services.AddHostedService<KeyRotationBackgroundService>();
 
             return services;

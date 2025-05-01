@@ -7,7 +7,7 @@ namespace RaiseYourVoice.Domain.Enums
         Failed,
         Refunded,
         Disputed,
-        Canceled
+        Cancelled
     }
     
     public enum PaymentMethod

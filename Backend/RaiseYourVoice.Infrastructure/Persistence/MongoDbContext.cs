@@ -193,15 +193,15 @@ namespace RaiseYourVoice.Infrastructure.Persistence
             
             await Donations.Indexes.CreateOneAsync(
                 new CreateIndexModel<Donation>(
-                    Builders<Donation>.IndexKeys.Ascending(d => d.DonorId),
-                    new CreateIndexOptions { Name = "DonorId_Index" }
+                    Builders<Donation>.IndexKeys.Ascending(d => d.UserId),
+                    new CreateIndexOptions { Name = "UserId_Index" }
                 )
             );
             
             await Donations.Indexes.CreateOneAsync(
                 new CreateIndexModel<Donation>(
-                    Builders<Donation>.IndexKeys.Ascending(d => d.Status),
-                    new CreateIndexOptions { Name = "Status_Index" }
+                    Builders<Donation>.IndexKeys.Ascending(d => d.PaymentStatus),
+                    new CreateIndexOptions { Name = "PaymentStatus_Index" }
                 )
             );
 

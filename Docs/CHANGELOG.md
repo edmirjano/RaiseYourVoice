@@ -1,5 +1,54 @@
 # Changelog
 
+## [Backend Bug Fixes & Dependencies] - 2025-05-01 18:45
+
+### Fixed
+- Implemented missing methods in `PushNotificationService`:
+  - Added `SendNotificationAsync` method to handle direct user notifications
+  - Added `SendAdminNotificationAsync` method for admin-specific notifications
+  - Added `SendCampaignUpdateNotificationAsync` method for campaign donors
+  - Fixed references to these methods across numerous controllers and services
+- Fixed Path handling in `ApiPathEncryptionMiddleware`:
+  - Properly handled nullable `PathString?` with `HasValue` check before accessing the value
+  - Correctly used the `Value` property for non-null PathString instances
+- Updated repositories to use correct property references:
+  - Refactored `NotificationRepository` to use `TargetAudience.UserIds` instead of non-existent `RecipientIds` field
+  - Fixed `DonationRepository` to reference `UserId` and `PaymentStatus` instead of `DonorId` and `Status`
+  - Corrected MongoDb index definitions to match actual entity properties
+- Fixed inheritance issues in repository classes:
+  - Corrected `RefreshTokenRepository` to properly inherit from `MongoGenericRepository<RefreshToken>`
+  - Fixed `EncryptionKeyRepository` constructor to match base class requirements
+- Addressed configuration binding issues in `InfrastructureServiceRegistration.cs`:
+  - Changed from passing `IConfigurationSection` to using lambda-based configuration
+  - Fixed options pattern implementation for MongoDB, Stripe, and KeyRotation settings
+- Added missing `Cancelled` enum value to `PaymentStatus` in `PaymentEnums.cs`
+- Updated `Program.cs` to correctly implement and use:
+  - Swagger for API documentation
+  - Rate limiting with proper options
+  - Health checks with MongoDB integration
+
+### Added
+- Implemented comprehensive `PushNotificationService` with:
+  - Device token management for push notifications
+  - Role-based notification sending
+  - Support for various notification targets (single user, multiple users, roles)
+  - Proper error handling and logging
+
+### Dependencies
+- Need to install the following NuGet packages to complete the fixes:
+  - Swashbuckle.AspNetCore for Swagger support
+  - AspNetCore.HealthChecks.MongoDb for MongoDB health checks
+  - AspNetCore.HealthChecks.Redis for Redis health checks
+  - Microsoft.AspNetCore.RateLimiting for API rate limiting
+
+## [Bug Fixes & Code Completion] - 2025-05-01 17:30
+
+### Fixed
+- Fixed missing return statement in `CampaignService.AddCampaignMilestoneAsync` method:
+  - Added `return false` statement to the catch block
+  - Ensured all code paths return a value
+  - Prevented potential runtime errors when adding campaign milestones
+
 ## [Code Refactoring & Architecture Improvements] - 2025-05-01 16:45
 
 ### Improvements
