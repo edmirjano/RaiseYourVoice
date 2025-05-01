@@ -1,5 +1,6 @@
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;
+using RaiseYourVoice.Application.Models.Requests;
 
 namespace RaiseYourVoice.Application.Interfaces
 {
@@ -14,17 +15,6 @@ namespace RaiseYourVoice.Application.Interfaces
         Task<PaymentStatus> GetPaymentStatusAsync(string transactionId);
     }
 
-    public class PaymentRequest
-    {
-        public decimal Amount { get; set; }
-        public string Currency { get; set; } = "USD";
-        public required string Description { get; set; }
-        public required DonorInformation CustomerInfo { get; set; }
-        public required PaymentMethodInfo PaymentMethod { get; set; }
-        public required string CampaignId { get; set; }
-        public bool SavePaymentMethod { get; set; }
-    }
-
     public class PaymentMethodInfo
     {
         public required string Type { get; set; } // "card", "bank_transfer", etc.
@@ -33,17 +23,17 @@ namespace RaiseYourVoice.Application.Interfaces
         public required string ExpiryYear { get; set; }
         public required string Cvc { get; set; }
         public required string CardholderName { get; set; }
-        public required string TokenId { get; set; } // For tokenized payment methods
+        public string? TokenId { get; set; } // For tokenized payment methods
     }
 
     public class PaymentResult
     {
         public bool Success { get; set; }
-        public required string TransactionId { get; set; }
-        public required string ErrorMessage { get; set; }
+        public string? TransactionId { get; set; }
+        public string? ErrorMessage { get; set; }
         public PaymentStatus Status { get; set; }
-        public required string ReceiptUrl { get; set; }
-        public required string CustomerId { get; set; }
-        public required string PaymentMethodId { get; set; }
+        public string? ReceiptUrl { get; set; }
+        public string? CustomerId { get; set; }
+        public string? PaymentMethodId { get; set; }
     }
 }

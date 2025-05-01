@@ -48,8 +48,11 @@ namespace RaiseYourVoice.Api.Controllers
                 Bio = request.Bio,
                 JoinDate = DateTime.UtcNow,
                 LastLogin = DateTime.UtcNow,
-                PreferredLanguage = request.PreferredLanguage,
-                NotificationSettings = new NotificationSettings(),
+                Preferences = new UserPreferences
+                {
+                    PreferredLanguage = request.PreferredLanguage,
+                    NotificationSettings = new NotificationSettings(),
+                },
                 CreatedAt = DateTime.UtcNow
             };
 

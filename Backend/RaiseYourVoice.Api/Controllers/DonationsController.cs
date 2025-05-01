@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Application.Models.Requests;
 using RaiseYourVoice.Domain.Entities;
+using RaiseYourVoice.Domain.Enums;
 
 namespace RaiseYourVoice.Api.Controllers
 {
@@ -98,19 +99,37 @@ namespace RaiseYourVoice.Api.Controllers
                 // Create donation record
                 string userId = User.Identity?.Name;
                 
+                // Create donor information from customer info if available
+                DonorInformation donorInfo = null;
+                if (paymentRequest.CustomerInfo != null)
+                {
+                    donorInfo = new DonorInformation
+                    {
+                        Email = paymentRequest.CustomerInfo.Email,
+                        FullName = paymentRequest.CustomerInfo.FullName,
+                        Address = paymentRequest.CustomerInfo.BillingAddress ?? "",
+                        City = paymentRequest.CustomerInfo.City ?? "",
+                        State = paymentRequest.CustomerInfo.City ?? "",
+                        Country = paymentRequest.CustomerInfo.Country ?? "US",
+                        PostalCode = paymentRequest.CustomerInfo.PostalCode ?? "",
+                        Phone = paymentRequest.CustomerInfo.PhoneNumber ?? "",
+                        IsTaxReceiptRequested = true
+                    };
+                }
+                
                 var donation = new Donation
                 {
                     CampaignId = paymentRequest.CampaignId,
                     UserId = userId, // Can be null for anonymous users
                     Amount = paymentRequest.Amount,
-                    IsAnonymous = paymentRequest.CustomerInfo?.FullName == null || string.IsNullOrEmpty(userId),
+                    IsAnonymous = donorInfo?.FullName == null || string.IsNullOrEmpty(userId),
                     Message = paymentRequest.Description,
                     PaymentStatus = paymentResult.Status,
                     TransactionId = paymentResult.TransactionId,
                     PaymentMethod = paymentRequest.PaymentMethod.Type,
                     Currency = paymentRequest.Currency,
                     ReceiptUrl = paymentResult.ReceiptUrl,
-                    DonorInformation = paymentRequest.CustomerInfo
+                    DonorInformation = donorInfo
                 };
 
                 var createdDonation = await _donationService.CreateDonationAsync(donation);

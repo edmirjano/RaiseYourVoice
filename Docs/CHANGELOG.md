@@ -1,5 +1,15 @@
 # Changelog
 
+## [Code Refactoring & Architecture Improvements] - 2025-05-01 16:45
+
+### Improvements
+- Consolidated duplicate `PaymentRequest` classes to eliminate redundancy:
+  - Removed duplicate `PaymentRequest` class from `IPaymentGateway.cs`
+  - Updated the single `PaymentRequest` class in Models/Requests with all necessary properties
+  - Modified `StripePaymentGateway` to work with the updated class structure
+  - Updated `DonationsController` to use the consolidated model
+- Enhanced code consistency and maintainability through class consolidation
+
 ## [Security Enhancements & Architecture Improvements] - 2025-05-01 14:30
 
 ### Added

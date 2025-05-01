@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using RaiseYourVoice.Application.Interfaces;
+using RaiseYourVoice.Application.Models.Requests;
 using RaiseYourVoice.Domain.Entities;
 using Stripe;
 using PaymentStatus = RaiseYourVoice.Domain.Enums.PaymentStatus;
@@ -45,11 +46,11 @@ namespace RaiseYourVoice.Infrastructure.Services
                     Customer = customerId,
                     PaymentMethod = paymentMethodId,
                     Confirm = true,
-                    ReceiptEmail = request.CustomerInfo.Email,
+                    ReceiptEmail = request.CustomerInfo?.Email,
                     Metadata = new System.Collections.Generic.Dictionary<string, string>
                     {
                         { "campaign_id", request.CampaignId },
-                        { "customer_name", request.CustomerInfo.FullName }
+                        { "customer_name", request.CustomerInfo?.FullName ?? "Anonymous" }
                     }
                 };
 
@@ -112,6 +113,8 @@ namespace RaiseYourVoice.Infrastructure.Services
 
         public async Task<string> CreateCustomerAsync(DonorInformation customerInfo)
         {
+            if (customerInfo == null) return "anonymous";
+            
             var customerService = new CustomerService();
             var customerCreateOptions = new CustomerCreateOptions
             {
