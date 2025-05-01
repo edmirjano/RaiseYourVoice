@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;
@@ -6,8 +7,11 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {
     public class OrganizationRepository : MongoRepository<Organization>
     {
-        public OrganizationRepository(MongoDbContext context) : base(context, "Organizations")
+        protected readonly ILogger<OrganizationRepository> _logger;
+
+        public OrganizationRepository(MongoDbContext context, ILogger<OrganizationRepository> logger) : base(context, "Organizations",logger)
         {
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Organization>> GetByVerificationStatusAsync(VerificationStatus status)
@@ -42,7 +46,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
                 .Set(o => o.VerifiedBy, verifiedById)
                 .Set(o => o.VerificationDate, verificationDate)
                 .Set(o => o.UpdatedAt, DateTime.UtcNow);
-            
+
             var result = await _collection.UpdateOneAsync(filter, update);
             return result.IsAcknowledged && result.ModifiedCount > 0;
         }
@@ -53,7 +57,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
             var update = Builders<Organization>.Update
                 .Push(o => o.TeamMembers, member)
                 .Set(o => o.UpdatedAt, DateTime.UtcNow);
-            
+
             var result = await _collection.UpdateOneAsync(filter, update);
             return result.IsAcknowledged && result.ModifiedCount > 0;
         }
@@ -64,11 +68,11 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
             var update = Builders<Organization>.Update
                 .PullFilter(o => o.TeamMembers, tm => tm.Id == teamMemberId)
                 .Set(o => o.UpdatedAt, DateTime.UtcNow);
-            
+
             var result = await _collection.UpdateOneAsync(filter, update);
             return result.IsAcknowledged && result.ModifiedCount > 0;
         }
-        
+
         public async Task<IEnumerable<Organization>> SearchOrganizationsAsync(string searchTerm)
         {
             var filter = Builders<Organization>.Filter.Or(
@@ -76,7 +80,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
                 Builders<Organization>.Filter.Regex(o => o.Description, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i")),
                 Builders<Organization>.Filter.Regex(o => o.MissionStatement, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i"))
             );
-            
+
             return await _collection.Find(filter)
                 .SortByDescending(o => o.CreatedAt)
                 .ToListAsync();
@@ -86,15 +90,15 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
         {
             // Convert km to radians (Earth's radius is approximately 6371 km)
             double maxDistanceInRadians = maxDistanceInKm / 6371.0;
-            
+
             // Create a geospatial query to find organizations near the given coordinates
             var filter = Builders<Organization>.Filter.NearSphere(
-                o => o.HeadquartersLocation, 
-                longitude, 
-                latitude, 
+                o => o.HeadquartersLocation,
+                longitude,
+                latitude,
                 maxDistanceInRadians
             );
-            
+
             return await _collection.Find(filter)
                 .SortByDescending(o => o.CreatedAt)
                 .ToListAsync();
@@ -107,7 +111,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
                 .Set(o => o.VerifiedBy, verifiedByUserId)
                 .Set(o => o.VerificationDate, DateTime.UtcNow)
                 .Set(o => o.UpdatedAt, DateTime.UtcNow);
-            
+
             var result = await _collection.UpdateOneAsync(o => o.Id == organizationId, update);
             return result.IsAcknowledged && result.ModifiedCount > 0;
         }

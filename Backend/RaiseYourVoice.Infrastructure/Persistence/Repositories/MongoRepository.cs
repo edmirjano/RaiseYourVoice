@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Common;
@@ -8,10 +9,12 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
     public class MongoRepository<T> : IGenericRepository<T> where T : BaseEntity
     {
         protected readonly IMongoCollection<T> _collection;
+        protected readonly ILogger<MongoRepository<T>> _logger;
 
-        public MongoRepository(MongoDbContext context, string collectionName)
+        public MongoRepository(MongoDbContext context, string collectionName, ILogger<MongoRepository<T>> logger)
         {
             _collection = context.Database.GetCollection<T>(collectionName);
+            _logger = logger;
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()
@@ -24,9 +27,18 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
             return await _collection.Find(expression).ToListAsync();
         }
 
-        public async Task<T> GetByIdAsync(string id)
+        public async Task<T?> GetByIdAsync(string id)
         {
-            return await _collection.Find(e => e.Id == id).FirstOrDefaultAsync();
+            try
+            {
+                var filter = Builders<T>.Filter.Eq("_id", id);
+                return await _collection.Find(filter).FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting entity by ID: {Message}", ex.Message);
+                return default;
+            }
         }
 
         public async Task<T> AddAsync(T entity)

@@ -51,7 +51,12 @@ namespace RaiseYourVoice.Api.Controllers
         [Authorize]
         public async Task<IActionResult> GetCurrentUserDonations()
         {
-            string userId = User.Identity.Name;
+            var userId = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return BadRequest("User identity not found");
+            }
+            
             var donations = await _donationService.GetDonationsByUserAsync(userId);
             return Ok(donations);
         }
@@ -69,7 +74,7 @@ namespace RaiseYourVoice.Api.Controllers
             if (donation.IsAnonymous && 
                 !User.IsInRole("Admin") && 
                 !User.IsInRole("Moderator") && 
-                User.Identity.Name != donation.UserId)
+                User.Identity?.Name != donation.UserId)
             {
                 return Forbid();
             }
@@ -196,8 +201,8 @@ namespace RaiseYourVoice.Api.Controllers
                 }
 
                 // Verify the user is authorized to access this receipt
-                string userId = User.Identity.Name;
-                if (donation.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("Moderator"))
+                string? userId = User.Identity?.Name;
+                if (userId == null || (donation.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("Moderator")))
                 {
                     return Forbid();
                 }

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Entities;
@@ -13,15 +14,16 @@ namespace RaiseYourVoice.Infrastructure.Services
         private readonly IDistributedCache _cache;
         private readonly Dictionary<string, Dictionary<string, string>> _memoryCache;
         private readonly TimeSpan _cacheExpirationTime = TimeSpan.FromHours(1);
-        
+        private readonly ILogger<LocalizationService> _logger;
         public LocalizationService(
             MongoDbContext dbContext,
-            IDistributedCache cache)
+            IDistributedCache cache,
+            ILogger<LocalizationService> logger)
         {
             _localizationCollection = dbContext.Database.GetCollection<LocalizationEntry>("Localizations");
             _cache = cache;
             _memoryCache = new Dictionary<string, Dictionary<string, string>>();
-            
+            _logger = logger;
             // Create indexes if they don't exist
             CreateIndexesAsync().GetAwaiter().GetResult();
         }
@@ -169,67 +171,75 @@ namespace RaiseYourVoice.Infrastructure.Services
             return result;
         }
 
-        public async Task<bool> SetLocalizedStringAsync(string key, string language, string value, string category = null, string description = null)
+        public async Task<bool> SetLocalizedStringAsync(string key, string language, string value, string? category = null, string? description = null)
         {
-            // Validate inputs
-            if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(language))
-                return false;
-            
-            // Only support English and Albanian
-            if (language != "en" && language != "sq")
-                return false;
+            try
+            {
+                // Validate inputs
+                if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(language))
+                    return false;
                 
-            // Upsert the entry (create or update)
-            var filter = Builders<LocalizationEntry>.Filter.And(
-                Builders<LocalizationEntry>.Filter.Eq(l => l.Key, key),
-                Builders<LocalizationEntry>.Filter.Eq(l => l.Language, language)
-            );
-            
-            var update = Builders<LocalizationEntry>.Update
-                .Set(l => l.Value, value)
-                .Set(l => l.UpdatedAt, DateTime.UtcNow);
+                // Only support English and Albanian
+                if (language != "en" && language != "sq")
+                    return false;
+                    
+                // Upsert the entry (create or update)
+                var filter = Builders<LocalizationEntry>.Filter.And(
+                    Builders<LocalizationEntry>.Filter.Eq(l => l.Key, key),
+                    Builders<LocalizationEntry>.Filter.Eq(l => l.Language, language)
+                );
                 
-            if (!string.IsNullOrWhiteSpace(category))
-            {
-                update = update.Set(l => l.Category, category);
-            }
-            
-            if (!string.IsNullOrWhiteSpace(description))
-            {
-                update = update.Set(l => l.Description, description);
-            }
-            
-            var options = new FindOneAndUpdateOptions<LocalizationEntry>
-            {
-                IsUpsert = true,
-                ReturnDocument = ReturnDocument.After
-            };
-            
-            var result = await _localizationCollection.FindOneAndUpdateAsync(filter, update, options);
-            
-            if (result != null)
-            {
-                // Update caches
-                string cacheKey = $"loc_{language}_{key}";
-                await _cache.RemoveAsync(cacheKey);
-                await _cache.RemoveAsync($"loc_all_{language}");
-                
-                // Also update the category cache if applicable
+                var update = Builders<LocalizationEntry>.Update
+                    .Set(l => l.Value, value)
+                    .Set(l => l.UpdatedAt, DateTime.UtcNow);
+                    
                 if (!string.IsNullOrWhiteSpace(category))
                 {
-                    await _cache.RemoveAsync($"loc_cat_{language}_{category}");
+                    update = update.Set(l => l.Category, category);
                 }
                 
-                // Update memory cache if it exists
-                if (_memoryCache.TryGetValue(language, out var languageDict))
+                if (!string.IsNullOrWhiteSpace(description))
                 {
-                    languageDict[key] = value;
+                    update = update.Set(l => l.Description, description);
                 }
                 
-                return true;
+                var options = new FindOneAndUpdateOptions<LocalizationEntry>
+                {
+                    IsUpsert = true,
+                    ReturnDocument = ReturnDocument.After
+                };
+                
+                var result = await _localizationCollection.FindOneAndUpdateAsync(filter, update, options);
+                
+                if (result != null)
+                {
+                    // Update caches
+                    string cacheKey = $"loc_{language}_{key}";
+                    await _cache.RemoveAsync(cacheKey);
+                    await _cache.RemoveAsync($"loc_all_{language}");
+                    
+                    // Also update the category cache if applicable
+                    if (!string.IsNullOrWhiteSpace(category))
+                    {
+                        await _cache.RemoveAsync($"loc_cat_{language}_{category}");
+                    }
+                    
+                    // Update memory cache if it exists
+                    if (_memoryCache.TryGetValue(language, out var languageDict))
+                    {
+                        languageDict[key] = value;
+                    }
+                    
+                    return true;
+                }
+                
+                return false;
             }
-            
-            return false;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting localized string: {Message}", ex.Message);
+                return false;
+            }
         }
 
         public async Task<IDictionary<string, string>> GetStringsByCategoryAsync(string category, string language)

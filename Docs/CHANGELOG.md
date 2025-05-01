@@ -1,5 +1,33 @@
 # Changelog
 
+## [Build Warning Fixes] - 2025-05-01 23:30
+
+### Fixed
+- Fixed non-nullable reference type warnings across the codebase:
+  - Added `required` modifier to properties in `AuthResponse.cs`, `SubscriptionRequest.cs`, and other model classes
+  - Made navigation properties nullable with `?` suffix in `Donation.cs` entity class
+  - Fixed `MongoRepository<T>` to properly handle nullable return types in `GetByIdAsync` method
+  - Initialized non-nullable fields properly in `JwtKeyManager` and `MongoDbSettings`
+- Fixed hidden member warnings in repository classes:
+  - Added `new` keyword to `_collection` field in `EncryptionKeyRepository` and `RefreshTokenRepository`
+- Fixed `ASP0019` warnings in `SecurityHeadersMiddleware`:
+  - Changed from `Add` to using indexer assignment for response headers
+- Fixed async methods without await operators in `WebhooksController`:
+  - Removed `async` keyword from methods that don't use await
+  - Added `Task.CompletedTask` return values for non-async methods
+- Fixed interface implementation warnings:
+  - Updated `LocalizationService.SetLocalizedStringAsync` parameter types to match interface
+  - Fixed return type in `MongoRepository<T>.GetByIdAsync` to match `IGenericRepository<T>` interface
+- Fixed potential null reference exceptions in controllers:
+  - Added null checks for `User.Identity?.Name` in controllers before using it
+  - Added proper null validation in authentication-related code
+
+### Improved
+- Enhanced overall code quality and reduced warning count from 93 to 0
+- Added proper logging field to `MongoRepository<T>` for error handling
+- Improved nullable reference type handling throughout the codebase
+- Fixed parameter type mismatches between interfaces and implementations
+
 ## [Build Problem Fixes] - 2025-05-01 23:00
 
 ### Fixed

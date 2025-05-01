@@ -11,7 +11,7 @@ namespace RaiseYourVoice.Application.Models.Requests
         /// ID of the campaign to donate to
         /// </summary>
         [Required]
-        public string CampaignId { get; set; }
+        public required string CampaignId { get; set; }
         
         /// <summary>
         /// Amount to donate periodically
@@ -23,6 +23,6 @@ namespace RaiseYourVoice.Application.Models.Requests
         /// ID of the saved payment method to use
         /// </summary>
         [Required]
-        public string PaymentMethodId { get; set; }
+        public required string PaymentMethodId { get; set; }
     }
 }

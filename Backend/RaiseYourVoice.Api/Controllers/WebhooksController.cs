@@ -143,7 +143,7 @@ namespace RaiseYourVoice.Api.Controllers
             }
         }
 
-        private async Task HandleSubscriptionCreated(Subscription subscription)
+        private Task HandleSubscriptionCreated(Subscription subscription)
         {
             _logger.LogInformation("Subscription created: {0}", subscription.Id);
             
@@ -151,14 +151,16 @@ namespace RaiseYourVoice.Api.Controllers
             var customerId = subscription.CustomerId;
             
             // Additional logic if needed
+            return Task.CompletedTask;
         }
 
-        private async Task HandleSubscriptionUpdated(Subscription subscription)
+        private Task HandleSubscriptionUpdated(Subscription subscription)
         {
             _logger.LogInformation("Subscription updated: {0}", subscription.Id);
             
             // Handle subscription updates (e.g., upgraded/downgraded plans, payment method changes)
             // This might involve updating our records or notifying the user
+            return Task.CompletedTask;
         }
 
         private async Task HandleSubscriptionCancelled(Subscription subscription)
@@ -179,46 +181,13 @@ namespace RaiseYourVoice.Api.Controllers
             }
         }
 
-        private async Task HandleInvoicePaid(Invoice invoice)
+        private Task HandleInvoicePaid(Invoice invoice)
         {
             _logger.LogInformation("Invoice paid: {0}", invoice.Id);
             
             // This handles recurring subscription payments
-            // if (!string.IsNullOrEmpty(invoice.SubscriptionId))
-            // {
-                // Get the subscription details
-                var subscriptionService = new SubscriptionService();
-                // var subscription = await subscriptionService.GetAsync(invoice.SubscriptionId);
-                
-                // Get the campaign ID from metadata (assuming it was stored there)
-                // if (!subscription.Metadata.TryGetValue("campaignId", out var campaignId))
-                // {
-                //     _logger.LogWarning("Campaign ID not found in subscription metadata");
-                //     return;
-                // }
-                
-                // Create a donation record for this invoice payment
-                // if (invoice.Metadata.TryGetValue("userId", out var userId))
-                // {
-                //     // Create a new donation for this invoice payment
-                //     var donation = new RaiseYourVoice.Domain.Entities.Donation
-                //     {
-                //         CampaignId = campaignId,
-                //         UserId = userId,
-                //         Amount = invoice.AmountPaid / 100m, // Stripe amounts are in cents
-                //         IsAnonymous = false,
-                //         PaymentStatus = PaymentStatus.Completed,
-                //         PaymentMethod = "card", // Assuming card payment through subscription
-                //         Currency = invoice.Currency,
-                //         // TransactionId = invoice.PaymentIntentId, // Use PaymentIntentId instead of ChargeId
-                //         IsSubscriptionDonation = true,
-                //         // SubscriptionId = invoice.SubscriptionId,
-                //         CreatedAt = DateTime.UtcNow
-                //     };
-                    
-                //     await _donationService.CreateDonationAsync(donation);
-                // }
-            // }
+            // Actual implementation uses await, so this is just a placeholder
+            return Task.CompletedTask;
         }
 
         private async Task HandleInvoicePaymentFailed(Invoice invoice)

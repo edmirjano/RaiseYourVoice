@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Entities;
@@ -6,10 +7,13 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {
     public class EncryptionKeyRepository : MongoRepository<EncryptionKey>, IEncryptionKeyRepository
     {
-        protected readonly IMongoCollection<EncryptionKey> _collection;
-        
-        public EncryptionKeyRepository(MongoDbContext context) 
-            : base(context, "EncryptionKeys")
+        // Use 'new' keyword to explicitly hide the base class _collection
+        protected new readonly IMongoCollection<EncryptionKey> _collection;
+
+        public EncryptionKeyRepository(
+            MongoDbContext context, 
+            ILogger<EncryptionKeyRepository> logger) 
+            : base(context, "EncryptionKeys", logger)
         {
             _collection = context.Database.GetCollection<EncryptionKey>("EncryptionKeys");
         }

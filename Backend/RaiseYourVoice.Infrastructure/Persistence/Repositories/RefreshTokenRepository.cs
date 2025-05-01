@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Entities;
@@ -6,10 +7,13 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {
     public class RefreshTokenRepository : MongoRepository<RefreshToken>, IRefreshTokenRepository
     {
-        protected readonly IMongoCollection<RefreshToken> _collection;
-        
-        public RefreshTokenRepository(MongoDbContext context) 
-            : base(context, "RefreshTokens")
+        // Use 'new' keyword to explicitly hide the base class _collection
+        protected new readonly IMongoCollection<RefreshToken> _collection;
+
+        public RefreshTokenRepository(
+            MongoDbContext context, 
+            ILogger<RefreshTokenRepository> logger) 
+            : base(context, "RefreshTokens", logger)
         {
             _collection = context.Database.GetCollection<RefreshToken>("RefreshTokens");
         }

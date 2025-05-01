@@ -27,6 +27,7 @@ namespace RaiseYourVoice.Infrastructure
             {
                 var settings = new MongoDbSettings
                 {
+                    DatabaseName = configuration.GetSection("MongoDbSettings:DatabaseName").Value,
                     ConnectionString = configuration.GetSection("MongoDbSettings:ConnectionString").Value
                 };
                 return new MongoClient(settings.ConnectionString);
