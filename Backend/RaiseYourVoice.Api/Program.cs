@@ -5,6 +5,7 @@ using RaiseYourVoice.Infrastructure;
 using System.Text;
 using RaiseYourVoice.Api.Middleware;
 using RaiseYourVoice.Infrastructure.Services.Security;
+using RaiseYourVoice.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -161,6 +162,9 @@ app.UseHttpsRedirection();
 // Add security headers middleware
 app.UseSecurityHeaders();
 
+// Add localization middleware
+app.UseLocalization();
+
 // Add API key validation middleware
 app.UseApiKeyValidation();
 
@@ -171,5 +175,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+// Create MongoDB indexes during startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
+    await dbContext.EnsureIndexesAsync();
+    app.Logger.LogInformation("MongoDB indexes created successfully");
+}
 
 app.Run();

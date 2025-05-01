@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Common;
+using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Infrastructure.Persistence;
 using RaiseYourVoice.Infrastructure.Persistence.Repositories;
 using RaiseYourVoice.Infrastructure.Services;
@@ -23,13 +24,24 @@ namespace RaiseYourVoice.Infrastructure
                 return new MongoClient(settings.ConnectionString);
             });
 
-            // Register repositories
+            // Register generic repository
             services.AddScoped(typeof(IGenericRepository<>), typeof(MongoRepository<>));
+            
+            // Register specific repositories
+            services.AddScoped<IGenericRepository<User>, UserRepository>();
+            services.AddScoped<IGenericRepository<Post>, PostRepository>();
+            services.AddScoped<IGenericRepository<Comment>, CommentRepository>();
+            services.AddScoped<IGenericRepository<Organization>, OrganizationRepository>();
+            services.AddScoped<IGenericRepository<Campaign>, CampaignRepository>();
+            services.AddScoped<IGenericRepository<Donation>, DonationRepository>();
+            services.AddScoped<IGenericRepository<Notification>, NotificationRepository>();
+            services.AddScoped<IGenericRepository<RefreshToken>, RefreshTokenRepository>();
 
             // Register services
             services.AddScoped<IPushNotificationService, PushNotificationService>();
             services.AddScoped<ICampaignService, CampaignService>();
             services.AddScoped<IDonationService, DonationService>();
+            services.AddScoped<ILocalizationService, LocalizationService>();
 
             // Register security services
             services.AddScoped<ITokenService, TokenService>();
