@@ -1,5 +1,43 @@
 # Changelog
 
+## [Interface Implementations & Backend Fixes] - 2025-05-01 19:30
+
+### Fixed
+- Completed interface implementations for repository classes:
+  - Added missing methods in `EncryptionKeyRepository` for `IEncryptionKeyRepository`:
+    - Implemented `GetActiveKeyAsync`, `ActivateKeyAsync`, `GetHighestVersionAsync` and more
+    - Added proper method signatures with correct parameter ordering
+  - Added missing methods in `RefreshTokenRepository` for `IRefreshTokenRepository`:
+    - Added `FindValidTokenAsync` and `MarkTokenAsRevokedAsync` methods
+    - Fixed `ExpiresAt` property reference in token expiration check
+- Fixed the `KeyRotationBackgroundService` class:
+  - Updated to properly inherit from `BackgroundService`
+  - Implemented required methods: `ExecuteAsync`, `StopAsync`, and `Dispose`
+  - Added configurable rotation check interval
+- Updated rate limiting configuration in Program.cs:
+  - Changed to modern approach with `AddFixedWindowLimiter`
+  - Fixed QueueProcessingOrder and PermitLimit settings
+- Implemented comprehensive `IPushNotificationService` interface:
+  - Added new notification methods in the interface definition
+  - Fixed references in WebhooksController and service classes
+- Fixed Stripe implementation in StripePaymentGateway:
+  - Removed reference to obsolete `Charges` API
+  - Updated to use modern Stripe payment intents API
+- Updated KeyRotationOptions in InfrastructureServiceRegistration.cs:
+  - Added proper configuration binding for rotation parameters
+  - Added support for RotationCheckIntervalHours setting
+
+### Dependencies
+To complete implementation, the following NuGet packages are needed:
+```
+Microsoft.AspNetCore.RateLimiting
+Microsoft.Extensions.Hosting.Abstractions
+AspNetCore.HealthChecks.MongoDb
+AspNetCore.HealthChecks.Redis
+Swashbuckle.AspNetCore
+Stripe.net
+```
+
 ## [Backend Bug Fixes & Dependencies] - 2025-05-01 18:45
 
 ### Fixed

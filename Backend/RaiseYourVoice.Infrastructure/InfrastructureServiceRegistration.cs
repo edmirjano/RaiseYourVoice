@@ -83,6 +83,7 @@ namespace RaiseYourVoice.Infrastructure
                 options.RotationIntervalDays = Convert.ToInt32(configuration.GetSection("KeyRotationSettings:RotationIntervalDays").Value ?? "30");
                 options.KeyGracePeriodDays = Convert.ToInt32(configuration.GetSection("KeyRotationSettings:KeyGracePeriodDays").Value ?? "7");
                 options.AutomaticRotation = Convert.ToBoolean(configuration.GetSection("KeyRotationSettings:AutomaticRotation").Value ?? "true");
+                options.RotationCheckIntervalHours = Convert.ToInt32(configuration.GetSection("KeyRotationSettings:RotationCheckIntervalHours").Value ?? "24");
             });
 
             services.AddHostedService<KeyRotationBackgroundService>();

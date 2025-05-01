@@ -99,5 +99,17 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
                 .SortByDescending(o => o.CreatedAt)
                 .ToListAsync();
         }
+
+        public async Task<bool> ApproveVerificationRequestAsync(string organizationId, string verifiedByUserId)
+        {
+            var update = Builders<Organization>.Update
+                .Set(o => o.VerificationStatus, VerificationStatus.Verified)
+                .Set(o => o.VerifiedBy, verifiedByUserId)
+                .Set(o => o.VerificationDate, DateTime.UtcNow)
+                .Set(o => o.UpdatedAt, DateTime.UtcNow);
+            
+            var result = await _collection.UpdateOneAsync(o => o.Id == organizationId, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
     }
 }

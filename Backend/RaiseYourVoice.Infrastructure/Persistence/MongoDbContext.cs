@@ -251,7 +251,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence
             
             await RefreshTokens.Indexes.CreateOneAsync(
                 new CreateIndexModel<RefreshToken>(
-                    Builders<RefreshToken>.IndexKeys.Ascending(r => r.ExpiresAt),
+                    Builders<RefreshToken>.IndexKeys.Ascending(r => r.ExpiryDate),
                     new CreateIndexOptions { Name = "Expiry_Index" }
                 )
             );

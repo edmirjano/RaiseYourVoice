@@ -1,166 +1,232 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RaiseYourVoice.Application.Interfaces;
-using RaiseYourVoice.Infrastructure.Security;
+using RaiseYourVoice.Domain.Entities;
+using System.Security.Cryptography;
 
 namespace RaiseYourVoice.Infrastructure.Services
 {
-    /// <summary>
-    /// Background service that periodically checks and rotates encryption keys
-    /// </summary>
     public class KeyRotationBackgroundService : BackgroundService
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<KeyRotationBackgroundService> _logger;
         private readonly KeyRotationOptions _options;
-        private Timer _timer;
+        private readonly List<string> _keyPurposes = new List<string> 
+        { 
+            "DataEncryption", 
+            "JwtSigning",
+            "ApiPathEncryption" 
+        };
 
         public KeyRotationBackgroundService(
-            IServiceProvider serviceProvider,
+            IServiceScopeFactory serviceScopeFactory,
             IOptions<KeyRotationOptions> options,
             ILogger<KeyRotationBackgroundService> logger)
         {
-            _serviceProvider = serviceProvider;
+            _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
             _options = options.Value;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Key Rotation Service is starting");
+            _logger.LogInformation("Key rotation service started");
 
-            // Don't start the timer if disabled
-            if (!_options.Enabled)
+            // Check immediately on startup
+            await CheckAndRotateKeysAsync();
+
+            // Then set up periodic checking
+            while (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("Key Rotation Service is disabled");
-                return Task.CompletedTask;
-            }
-
-            // Start immediately, then run on a schedule
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, 
-                TimeSpan.FromHours(_options.CheckIntervalHours));
-
-            return Task.CompletedTask;
-        }
-
-        private void DoWork(object state)
-        {
-            _logger.LogInformation("Key Rotation Service is checking for key rotation needs");
-            
-            // Run asynchronously but don't await (we're in a timer callback)
-            Task.Run(async () =>
-            {
+                // Default check every 24 hours if not specified
+                var checkIntervalHours = _options.RotationCheckIntervalHours ?? 24;
+                
                 try
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var encryptionService = scope.ServiceProvider.GetRequiredService<IEncryptionService>();
-                    var encryptionLogger = scope.ServiceProvider.GetService<EncryptionLoggingService>();
-                    var jwtKeyManager = scope.ServiceProvider.GetService<JwtKeyManager>();
+                    await Task.Delay(TimeSpan.FromHours(checkIntervalHours), stoppingToken);
                     
-                    // Log the start of key rotation check
-                    encryptionLogger?.LogSecurityEvent(
-                        "KeyRotationCheckStarted",
-                        "Scheduled key rotation check is being performed",
-                        severity: 0);
-                    
-                    // Perform encryption key rotation check
-                    bool encryptionKeysRotated = await encryptionService.PerformScheduledKeyRotationAsync();
-                    
-                    // Perform JWT key rotation
-                    bool jwtKeyRotated = false;
-                    if (jwtKeyManager != null)
+                    if (!stoppingToken.IsCancellationRequested)
                     {
-                        jwtKeyRotated = jwtKeyManager.RotateSigningKey();
-                        
-                        if (jwtKeyRotated)
-                        {
-                            encryptionLogger?.LogSecurityEvent(
-                                "JwtKeyRotationPerformed",
-                                "JWT signing key rotation performed successfully",
-                                severity: 0);
-                            
-                            _logger.LogInformation("JWT signing key rotation performed successfully");
-                        }
+                        await CheckAndRotateKeysAsync();
                     }
-                    
-                    // Log the result of key rotation check
-                    if (encryptionKeysRotated || jwtKeyRotated)
-                    {
-                        encryptionLogger?.LogSecurityEvent(
-                            "KeyRotationPerformed",
-                            "Key rotation performed successfully",
-                            severity: 0);
-                        
-                        _logger.LogInformation("Key rotation performed successfully");
-                    }
-                    else
-                    {
-                        encryptionLogger?.LogSecurityEvent(
-                            "NoKeyRotationNeeded",
-                            "No key rotation needed at this time",
-                            severity: 0);
-                        
-                        _logger.LogInformation("No key rotation needed at this time");
-                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Graceful shutdown
+                    break;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error occurred during key rotation check");
-                    
-                    // Try to log the error with the encryption logger if available
-                    try
-                    {
-                        using var errorScope = _serviceProvider.CreateScope();
-                        var encryptionLogger = errorScope.ServiceProvider.GetService<EncryptionLoggingService>();
-                        
-                        encryptionLogger?.LogSecurityEvent(
-                            "KeyRotationError",
-                            $"Error during key rotation check: {ex.Message}",
-                            severity: 2);
-                    }
-                    catch
-                    {
-                        // Ignore errors in error logging to prevent cascading failures
-                    }
+                    _logger.LogError(ex, "Error during key rotation check");
                 }
-            });
+            }
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
+        private async Task CheckAndRotateKeysAsync()
         {
-            _logger.LogInformation("Key Rotation Service is stopping");
+            if (!_options.AutomaticRotation)
+            {
+                _logger.LogInformation("Automatic key rotation is disabled");
+                return;
+            }
+
+            _logger.LogInformation("Checking for key rotation needs");
+
+            using var scope = _serviceScopeFactory.CreateScope();
+            var keyRepository = scope.ServiceProvider.GetRequiredService<IEncryptionKeyRepository>();
             
-            _timer?.Change(Timeout.Infinite, 0);
+            foreach (var purpose in _keyPurposes)
+            {
+                try
+                {
+                    await CheckKeyForPurposeAsync(purpose, keyRepository);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error checking keys for purpose {Purpose}", purpose);
+                }
+            }
+        }
+
+        private async Task CheckKeyForPurposeAsync(string purpose, IEncryptionKeyRepository keyRepository)
+        {
+            // Get current active key
+            var activeKey = await keyRepository.GetActiveKeyAsync(purpose);
             
-            return base.StopAsync(cancellationToken);
+            if (activeKey == null)
+            {
+                _logger.LogWarning("No active key found for purpose: {Purpose}. Creating initial key.", purpose);
+                await CreateInitialKeyAsync(purpose, keyRepository);
+                return;
+            }
+
+            // Check if key rotation is needed
+            var rotationIntervalDays = _options.RotationIntervalDays ?? 30;
+            var rotationThreshold = DateTime.UtcNow.AddDays(-rotationIntervalDays);
+            
+            if (activeKey.CreatedAt < rotationThreshold)
+            {
+                _logger.LogInformation("Key rotation needed for purpose: {Purpose}", purpose);
+                await RotateKeyAsync(purpose, activeKey, keyRepository);
+            }
+            else
+            {
+                _logger.LogInformation("No key rotation needed for purpose: {Purpose}", purpose);
+            }
+        }
+
+        private async Task CreateInitialKeyAsync(string purpose, IEncryptionKeyRepository keyRepository)
+        {
+            try
+            {
+                var key = GenerateEncryptionKey(purpose, 1);
+                await keyRepository.AddAsync(key);
+                _logger.LogInformation("Created initial key for purpose: {Purpose}", purpose);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create initial key for purpose: {Purpose}", purpose);
+                throw;
+            }
+        }
+
+        private async Task RotateKeyAsync(string purpose, EncryptionKey oldKey, IEncryptionKeyRepository keyRepository)
+        {
+            try
+            {
+                // Get highest version
+                int highestVersion = await keyRepository.GetHighestVersionAsync(purpose);
+                
+                // Create new key with incremented version
+                var newKey = GenerateEncryptionKey(purpose, highestVersion + 1);
+                await keyRepository.AddAsync(newKey);
+                
+                // Set expiration on old key (after grace period)
+                var gracePeriodDays = _options.KeyGracePeriodDays ?? 7;
+                oldKey.ExpiresAt = DateTime.UtcNow.AddDays(gracePeriodDays);
+                
+                // Deactivate old key and activate new key
+                await keyRepository.UpdateAsync(oldKey);
+                await keyRepository.ActivateKeyAsync(newKey.Id, purpose);
+                
+                _logger.LogInformation(
+                    "Rotated key for purpose: {Purpose}. New key version: {Version}, old key expires: {ExpiryDate}", 
+                    purpose, newKey.Version, oldKey.ExpiresAt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to rotate key for purpose: {Purpose}", purpose);
+                throw;
+            }
+        }
+
+        private EncryptionKey GenerateEncryptionKey(string purpose, int version)
+        {
+            byte[] keyBytes;
+            
+            // Different key generation based on purpose
+            switch (purpose)
+            {
+                case "JwtSigning":
+                    // For JWT signing, use asymmetric algorithm
+                    using (var rsa = RSA.Create(2048))
+                    {
+                        return new EncryptionKey
+                        {
+                            Purpose = purpose,
+                            Version = version,
+                            KeyData = Convert.ToBase64String(rsa.ExportRSAPrivateKey()),
+                            PublicKeyData = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
+                            Algorithm = "RSA-2048",
+                            IsActive = true,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                    }
+                
+                case "ApiPathEncryption":
+                    // For API path encryption, use 128-bit key (shorter for URL efficiency)
+                    keyBytes = new byte[16];
+                    RandomNumberGenerator.Fill(keyBytes);
+                    break;
+                
+                default:
+                    // For data encryption, use 256-bit key
+                    keyBytes = new byte[32];
+                    RandomNumberGenerator.Fill(keyBytes);
+                    break;
+            }
+            
+            return new EncryptionKey
+            {
+                Purpose = purpose,
+                Version = version,
+                KeyData = Convert.ToBase64String(keyBytes),
+                Algorithm = purpose == "ApiPathEncryption" ? "AES-128" : "AES-256",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Key rotation service is stopping");
+            await base.StopAsync(cancellationToken);
         }
 
         public override void Dispose()
         {
-            _timer?.Dispose();
+            _logger.LogInformation("Key rotation service disposed");
             base.Dispose();
         }
     }
 
-    /// <summary>
-    /// Configuration options for key rotation service
-    /// </summary>
     public class KeyRotationOptions
     {
-        /// <summary>
-        /// Whether key rotation is enabled
-        /// </summary>
-        public bool Enabled { get; set; } = true;
-        
-        /// <summary>
-        /// How often to check for key rotation needs (in hours)
-        /// </summary>
-        public int CheckIntervalHours { get; set; } = 12;
-        
-        /// <summary>
-        /// How often to rotate JWT signing keys (in hours)
-        /// </summary>
-        public int JwtKeyRotationHours { get; set; } = 24;
+        public int? RotationIntervalDays { get; set; }
+        public int? KeyGracePeriodDays { get; set; }
+        public bool AutomaticRotation { get; set; } = true;
+        public int? RotationCheckIntervalHours { get; set; }
     }
 }

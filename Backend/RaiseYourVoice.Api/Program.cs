@@ -148,16 +148,15 @@ builder.Services.AddAuthentication(options =>
 // Add API rate limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = Microsoft.AspNetCore.RateLimiting.PartitionedRateLimiter.CreateTokenBucketLimiter<string>(partitionKey =>
-        new Microsoft.AspNetCore.RateLimiting.TokenBucketRateLimiterOptions
-        {
-            TokenLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100"),
-            QueueProcessingOrder = Microsoft.AspNetCore.RateLimiting.QueueProcessingOrder.OldestFirst,
-            QueueLimit = 0,
-            ReplenishmentPeriod = TimeSpan.FromMinutes(1),
-            TokensPerPeriod = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100"),
-            AutoReplenishment = true
-        });
+    options.AddFixedWindowLimiter("fixed", options =>
+    {
+        options.PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100");
+        options.Window = TimeSpan.FromMinutes(1);
+        options.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        options.QueueLimit = 0; // No queuing, just reject when limit is hit
+    });
+    
+    options.GlobalLimiter = options.CreateLimiter("fixed");
 });
 
 // Configure Health Checks

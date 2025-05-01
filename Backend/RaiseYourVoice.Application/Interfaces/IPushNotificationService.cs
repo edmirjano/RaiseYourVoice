@@ -33,5 +33,20 @@ namespace RaiseYourVoice.Application.Interfaces
         /// Remove a device token for a user (e.g., on logout)
         /// </summary>
         Task RemoveDeviceTokenAsync(string userId, string deviceToken);
+
+        /// <summary>
+        /// Send a simple notification to a user with just title and content
+        /// </summary>
+        Task<bool> SendNotificationAsync(string userId, string title, string content);
+
+        /// <summary>
+        /// Send a notification to admin users
+        /// </summary>
+        Task<bool> SendAdminNotificationAsync(string title, string content);
+
+        /// <summary>
+        /// Send a notification to all users who donated to a campaign
+        /// </summary>
+        Task<bool> SendCampaignUpdateNotificationAsync(string campaignId, string title, string content);
     }
 }
