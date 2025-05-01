@@ -25,14 +25,4 @@ namespace RaiseYourVoice.Domain.Enums
         Sports,
         Other
     }
-
-    public enum PaymentStatus
-    {
-        Pending,
-        Completed,
-        Failed,
-        Refunded,
-        Cancelled,
-        Disputed
-    }
 }

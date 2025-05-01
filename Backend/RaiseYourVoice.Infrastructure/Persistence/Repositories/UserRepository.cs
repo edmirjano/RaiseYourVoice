@@ -26,8 +26,8 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
         {
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update
-                .Set(u => u.PreferredLanguage, preferences.PreferredLanguage)
-                .Set(u => u.NotificationSettings, preferences.NotificationSettings)
+                .Set(u => u.Preferences.PreferredLanguage, preferences.PreferredLanguage)
+                .Set(u => u.Preferences.NotificationSettings, preferences.NotificationSettings)
                 .Set(u => u.UpdatedAt, DateTime.UtcNow);
 
             var result = await _collection.UpdateOneAsync(filter, update);
