@@ -5,13 +5,14 @@ This document outlines the development plan for the web application of the Raise
 
 ## Technical Stack & Architecture
 
-- **Framework**: Next.js
+- **Framework**: Next.js (Server-Side Rendering enabled for all pages)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS (no custom CSS)
 - **State Management**: React Context API + SWR for data fetching
 - **Authentication**: JWT with refresh tokens, OAuth integrations
 - **API Communication**: Axios for REST API calls
 - **Internationalization**: next-i18next
+- **Media Formats**: WebP for images, WebM for videos, and PDF/other document types for downloadable content
 - **Deployment**: Docker containerization
 - **PWA Support**: Next.js PWA capabilities
 - **Key Libraries**:
@@ -21,6 +22,8 @@ This document outlines the development plan for the web application of the Raise
   - Chart.js for analytics visualization
   - React Table for data grids
   - Framer Motion for animations
+  - Motion One for lightweight animations
+  - GSAP for advanced animation sequences
 
 ## Project Structure
 
@@ -183,6 +186,7 @@ Web/
 
 - **Week 1**: Project setup and architecture
   - Configure Next.js project with TypeScript
+  - Enable Server-Side Rendering (SSR) for all pages
   - Set up Tailwind CSS theming with iOS-inspired design
   - Create base layout components
   - Configure internationalization with next-i18next
@@ -201,6 +205,8 @@ Web/
   - Implement navigation and routing
   - Build common form components
   - Set up modal and toast notification systems
+  - Ensure all media assets (images, videos) use WebP and WebM formats for optimal performance
+  - Implement WebP/WebM conversion utilities for uploaded content
 
 - **Week 4**: API integration layer
   - Create API client with Axios
@@ -216,7 +222,11 @@ Web/
   - Build social feed with pagination
   - Create post rendering for different content types
   - Implement like and comment functionality
-  - Build post creation form for authenticated users
+  - Build post creation form with file upload capabilities
+  - Add media optimization pipeline for WebP/WebM conversion
+  - Implement client-side file validation and size limitations
+  - Implement smooth scrolling and page transitions
+  - Add entrance animations for content sections
 
 - **Week 6**: Opportunities section
   - Develop opportunities listing page
@@ -254,6 +264,7 @@ Web/
   - Build dashboard overview page
   - Create admin authentication guards
   - Set up admin-specific API services
+  - Implement support for encrypted API paths from the backend
 
 - **Week 11**: User and content management
   - Implement user management interface
@@ -388,13 +399,53 @@ Web/
 
 ## Deployment Strategy
 
-- Docker containerization
-- Environment-specific configurations
-- Blue/green deployment approach
-- Automated CI/CD pipeline
-- Monitoring and alerting setup
-- Content Delivery Network (CDN) integration
-- Backup and disaster recovery planning
+- **Containerization**: Use Docker for building images locally.
+- **Orchestration**: Deploy using Kubernetes (K3s) for lightweight orchestration.
+- **Secrets Management**:
+  - Store sensitive data (e.g., API keys, environment variables) in Kubernetes Secrets.
+  - Use `appsettings.json` as a fallback for local development.
+- **Image Deployment**:
+  - Build Docker images locally.
+  - Package images and deployment files into a zip archive.
+  - Transfer the zip archive to the VPS using SSH (key-based authentication, no passwords).
+  - Extract and deploy using bash scripts for smoother automation.
+- **Domains**:
+  - Use `raiseyourvoice.al` for the web application.
+  - Use `api.raiseyourvoice.al` for the backend.
+- **Ingress**:
+  - Use Nginx Ingress Controller for routing traffic.
+  - Configure SSL certificates with Cert-Manager and Let's Encrypt.
+- **Pipeline**:
+  - Use a shared CI/CD pipeline for both web and backend deployments.
+  - Automate deployment steps with bash scripts for consistency.
+- **Scaling**:
+  - Configure Horizontal Pod Autoscaler (HPA) for scaling based on traffic.
+- **Monitoring**:
+  - Use Prometheus and Grafana for monitoring.
+  - Centralized logging with Fluentd or Loki.
+- **K3s Maintenance**:
+  - Regularly update K3s to ensure security and stability.
+
+## File Handling Implementation
+
+### File Upload System
+- Implement client-side file validation and optimization
+- Add drag-and-drop interface for file uploads
+- Create progress indicators for upload status
+- Implement resumable uploads for larger files
+- Support multi-file uploads for posts and organization documents
+
+### Media Optimization
+- Client-side image resizing before upload to reduce bandwidth
+- Server integration for WebP/WebM conversion
+- Responsive image loading with appropriate sizes for different devices
+- Lazy loading implementation for media-heavy pages
+
+### CDN Integration
+- Configure proper caching headers for static assets
+- Implement URL rewriting for CDN-served content
+- Add fallback mechanisms for CDN failures
+- Monitor CDN performance and usage analytics
 
 ## Internationalization
 
@@ -404,6 +455,22 @@ Web/
 - Right-to-left (RTL) support foundation
 - Culture-specific content adaptation
 - Language detection
+
+## Animation Strategy
+- Use Framer Motion for component-level animations and transitions
+- Implement GSAP for complex animation sequences
+- Create scroll-triggered animations for the landing page
+- Apply subtle micro-interactions to improve user experience
+- Use AnimatePresence for elegant component mounting/unmounting
+- Implement page transitions with shared layout animations
+- Create staggered animations for list items and grids
+- Use spring physics for natural motion effects
+- Ensure all animations respect reduced motion preferences
+- Create branded animations for key user flows
+- Implement hover state animations for interactive elements
+- Add loading state animations to improve perceived performance
+- Ensure consistent timing and easing functions throughout the app
+- Use animation variables in Tailwind config for standardization
 
 ## Conclusion
 

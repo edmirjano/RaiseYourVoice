@@ -88,47 +88,59 @@ This document tracks the implementation status of the RaiseYourVoice activism pl
 ## Frontend Implementation
 
 ### Web (Next.js)
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Landing Page | ⚠️ In Progress | Single-page scrolling design |
-| Authentication | ⚠️ In Progress | Login/registration flows |
-| Social Feed | ⚠️ In Progress | Post viewing and creation |
-| Opportunities | ⚠️ In Progress | Event listings and filtering |
-| Success Stories | ⚠️ In Progress | Activist profiles and spotlights |
-| Admin Dashboard | ❌ Not Started | Content and user management |
-| Multilingual Support | ⚠️ In Progress | English and Albanian implemented |
+| Component              | Status         | Notes                                      |
+|------------------------|----------------|--------------------------------------------|
+| Landing Page           | ⚠️ In Progress | Single-page scrolling design              |
+| Authentication         | ⚠️ In Progress | Login/registration flows                  |
+| Social Feed            | ⚠️ In Progress | Post viewing and creation                 |
+| Opportunities          | ⚠️ In Progress | Event listings and filtering              |
+| Success Stories        | ⚠️ In Progress | Activist profiles and spotlights          |
+| Admin Dashboard        | ❌ Not Started | Content and user management               |
+| Multilingual Support   | ⚠️ In Progress | English and Albanian implemented          |
+| Media Optimization     | ⚠️ In Progress | Ensure all images use WebP and videos use WebM formats for performance. |
 
 ### iOS App
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Project Structure | ✅ Implemented | Xcode project setup |
-| Authentication | ⚠️ In Progress | Secure token storage in Keychain |
-| Social Feed | ❌ Not Started | Post viewing and interaction |
-| Opportunities | ❌ Not Started | Event discovery |
-| Success Stories | ❌ Not Started | Inspirational content |
-| Profile Management | ❌ Not Started | User settings and preferences |
-| Deep Link Handling | ❌ Not Started | Direct navigation support |
+| Component              | Status         | Notes                                      |
+|------------------------|----------------|--------------------------------------------|
+| Project Structure      | ✅ Implemented | Xcode project setup                        |
+| Authentication         | ⚠️ In Progress | Secure token storage in Keychain          |
+| Social Feed            | ❌ Not Started | Post viewing and interaction              |
+| Opportunities          | ❌ Not Started | Event discovery                            |
+| Success Stories        | ❌ Not Started | Inspirational content                      |
+| Profile Management     | ❌ Not Started | User settings and preferences             |
+| Deep Link Handling     | ❌ Not Started | Direct navigation support                 |
+| Media Optimization     | ❌ Not Started | Add support for WebP and WebM formats.    |
 
 ### Android App
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Project Structure | ✅ Implemented | Gradle project setup |
-| Authentication | ⚠️ In Progress | Secure token storage |
-| Social Feed | ❌ Not Started | Post viewing and interaction |
-| Opportunities | ❌ Not Started | Event discovery |
-| Success Stories | ❌ Not Started | Inspirational content |
-| Profile Management | ❌ Not Started | User settings and preferences |
-| Deep Link Handling | ❌ Not Started | Direct navigation support |
+| Component              | Status         | Notes                                      |
+|------------------------|----------------|--------------------------------------------|
+| Project Structure      | ✅ Implemented | Gradle project setup                       |
+| Authentication         | ⚠️ In Progress | Secure token storage                       |
+| Social Feed            | ❌ Not Started | Post viewing and interaction              |
+| Opportunities          | ❌ Not Started | Event discovery                            |
+| Success Stories        | ❌ Not Started | Inspirational content                      |
+| Profile Management     | ❌ Not Started | User settings and preferences             |
+| Deep Link Handling     | ❌ Not Started | Direct navigation support                 |
+| Media Optimization     | ❌ Not Started | Add support for WebP and WebM formats.    |
 
 ## Infrastructure and Deployment
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Docker Configuration | ⚠️ In Progress | Container definitions |
-| Nginx Setup | ⚠️ In Progress | Reverse proxy configuration |
-| Prometheus Monitoring | ⚠️ In Progress | Performance and health metrics |
-| CI/CD Pipeline | ❌ Not Started | Automated deployment |
-| SSL/TLS | ✅ Implemented | Secure communication enforced |
-| Database Backups | ❌ Not Started | Data protection strategy |
+| Component              | Status         | Notes                                      |
+|------------------------|----------------|--------------------------------------------|
+| Docker Configuration   | ⚠️ In Progress | Transitioning to Kubernetes (K3s).         |
+| Kubernetes Deployment  | ❌ Not Started | Plan to use K3s for orchestration.         |
+| Secrets Management     | ❌ Not Started | Use Kubernetes Secrets for sensitive data. |
+| Image Deployment       | ❌ Not Started | Build locally, transfer via SSH, deploy.   |
+| Shared Pipeline        | ❌ Not Started | Use shared pipeline for web and backend.   |
+| Nginx Setup            | ⚠️ In Progress | Configure as Ingress Controller.           |
+| Prometheus Monitoring  | ⚠️ In Progress | Integrate with Kubernetes.                 |
+| CI/CD Pipeline         | ❌ Not Started | Automate Kubernetes deployments.           |
+| SSL/TLS                | ✅ Implemented | Secure communication enforced.             |
+| Database Backups       | ❌ Not Started | Data protection strategy.                  |
+| K3s Maintenance        | ❌ Not Started | Regular updates for security and stability.|
+| File Storage System    | ❌ Not Started | Plan to use a dedicated storage system (e.g., S3, MinIO). |
+| CDN Integration        | ❌ Not Started | Serve files via a CDN for performance.     |
+| File Upload API        | ❌ Not Started | Secure API for handling file uploads.      |
+| File Optimization      | ❌ Not Started | Convert images/videos to WebP/WebM formats.|
 
 ## Next Steps Priority
 1. ✅ Implement data encryption for sensitive information

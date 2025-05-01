@@ -9,14 +9,20 @@ This document outlines the development plan for the Android application of the R
 - **Architecture**: MVVM (Model-View-ViewModel) with Clean Architecture principles
 - **Minimum SDK**: API level 24 (Android 7.0)
 - **Target SDK**: Latest (API level 34)
+- **Media Formats**: WebP for images, WebM for videos (preferred formats for performance and compatibility)
 - **Key Libraries**:
   - Dagger-Hilt for dependency injection
   - Jetpack Navigation Component
   - Retrofit with OkHttp for API calls
   - Room for local caching
   - EncryptedSharedPreferences for secure storage
-  - Coil for image loading
+  - Coil for image loading (with WebP support)
+  - ExoPlayer for WebM video playback
+  - gRPC-kotlin for backend communication
+  - CameraX for photo/video capture with format conversion
   - Firebase Cloud Messaging for push notifications
+  - Lottie for complex vector animations
+  - Material Motion for transition animations
 
 ## Project Structure
 
@@ -90,6 +96,8 @@ RaiseYourVoice/
   - Create API service interfaces
   - Implement automatic token refresh mechanism
   - Set up error handling and connection monitoring
+  - Implement gRPC client for efficient mobile communication
+  - Add support for encrypted API paths from backend
 
 ### Phase 2: Core Features (Weeks 5-10)
 - **Week 5-6**: Social Feed tab
@@ -97,7 +105,9 @@ RaiseYourVoice/
   - Create custom ViewHolders for different content types
   - Implement like and comment functionality
   - Add post creation UI for registered users
-  - Implement media handling (images, videos)
+  - Implement media handling (images, videos) with WebP/WebM support
+  - Add file upload capabilities with compression
+  - Create media cache management for offline viewing
 
 - **Week 7**: Opportunities tab
   - Create list and grid views for activism events
@@ -143,11 +153,13 @@ RaiseYourVoice/
   - Add conflict resolution strategies
   - Implement background sync using WorkManager
 
-- **Week 14**: Multilingual support
+- **Week 14**: Multilingual support and UI refinement
   - Set up localization for English and Albanian
   - Implement runtime language switching
   - Add support for RTL layouts
   - Create accessibility enhancements
+  - Implement advanced animations and transitions
+  - Add Apple-style animation effects throughout the app
 
 ### Phase 4: Finalization (Weeks 15-16)
 - **Week 15**: Security hardening and testing
@@ -190,6 +202,18 @@ RaiseYourVoice/
 - Keyboard navigation support
 - Font scaling support
 
+## Animation Strategy
+- Use Material Motion for seamless navigation transitions
+- Implement Lottie for complex loading and success/error state animations
+- Apply spring-based animations for natural and responsive feedback
+- Create shared element transitions for a connected user experience
+- Implement subtle list item animations (fade, slide, scale) 
+- Use MotionLayout for complex animated layouts and interactions
+- Apply physics-based animations for realistic motion effects
+- Create custom animations for branding moments (splash screen, logo)
+- Ensure consistent animation timing and easing curves app-wide
+- Use subtle haptic feedback paired with animations for immersive experience
+
 ## Testing Strategy
 - Unit tests for all business logic
 - Integration tests for critical flows
@@ -204,3 +228,12 @@ RaiseYourVoice/
 - Staged rollout for production releases
 - Continuous integration with automated testing
 - Feature flagging for controlled feature releases
+
+## Media Handling
+- WebP image loading and display optimization
+- WebM video playback with ExoPlayer
+- Client-side media compression before upload
+- Efficient media caching strategy
+- Support for progressive image loading
+- Background media pre-fetching for smoother scrolling
+- Media upload queue management for poor connectivity scenarios

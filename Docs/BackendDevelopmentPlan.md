@@ -5,7 +5,7 @@ This document outlines the development plan for the backend services of the Rais
 
 ## Technical Stack & Architecture
 
-- **Framework**: .NET 8/9
+- **Framework**: .NET 9
 - **Architecture**: Clean Architecture
 - **Database**: MongoDB
 - **Caching**: Redis
@@ -35,213 +35,40 @@ The backend follows Clean Architecture principles with the following layers:
 Backend/
 ├── RaiseYourVoice.Api/
 │   ├── Controllers/
-│   │   ├── AuthController.cs
-│   │   ├── BaseApiController.cs
-│   │   ├── UsersController.cs
-│   │   ├── PostsController.cs
-│   │   ├── CommentsController.cs
-│   │   ├── OrganizationsController.cs
-│   │   ├── CampaignsController.cs
-│   │   ├── DonationsController.cs
-│   │   ├── NotificationsController.cs
-│   │   ├── WebhooksController.cs
-│   │   ├── LocalizationsController.cs
 │   ├── Middleware/
-│   │   ├── ErrorHandlingMiddleware.cs
-│   │   ├── ApiKeyMiddleware.cs
-│   │   ├── RateLimitingMiddleware.cs
-│   │   ├── LocalizationMiddleware.cs
-│   │   ├── LocalizationMiddlewareExtensions.cs
-│   │   ├── SecurityHeadersMiddleware.cs
-│   │   ├── SecurityHeadersMiddlewareExtensions.cs
 │   ├── Filters/
-│   │   ├── ApiExceptionFilter.cs
-│   │   ├── ValidationFilter.cs
 │   ├── gRPC/
-│   │   ├── Services/
-│   │   │   ├── AuthService.cs
-│   │   │   ├── UserService.cs
-│   │   │   ├── PostService.cs
-│   │   │   ├── NotificationService.cs
-│   │   │   ├── OrganizationService.cs
 │   ├── Protos/
-│   │   │   ├── auth.proto
-│   │   │   ├── user.proto
-│   │   │   ├── post.proto
-│   │   │   ├── comment.proto
-│   │   │   ├── notification.proto
-│   │   │   ├── organization.proto
 │   ├── Program.cs
 │   ├── appsettings.json
-│   ├── appsettings.Development.json
 │
 ├── RaiseYourVoice.Application/
 │   ├── Common/
-│   │   ├── Behaviors/
-│   │   │   ├── ValidationBehavior.cs
-│   │   │   ├── LoggingBehavior.cs
-│   │   │   ├── CachingBehavior.cs
-│   │   ├── Exceptions/
-│   │   │   ├── NotFoundException.cs
-│   │   │   ├── ValidationException.cs
-│   │   │   ├── AuthorizationException.cs
-│   │   ├── Mappings/
-│   │   │   ├── MappingProfile.cs
-│   │   ├── Models/
-│   │   │   ├── PaginatedResult.cs
-│   │   │   ├── Result.cs
 │   ├── Features/
-│   │   ├── Auth/
-│   │   │   ├── Commands/
-│   │   │   │   ├── LoginUser.cs
-│   │   │   │   ├── RegisterUser.cs
-│   │   │   │   ├── RefreshToken.cs
-│   │   │   ├── Queries/
-│   │   │   ├── Validators/
-│   │   ├── Users/
-│   │   │   ├── Commands/
-│   │   │   ├── Queries/
-│   │   │   ├── Validators/
-│   │   ├── Posts/
-│   │   │   ├── Commands/
-│   │   │   ├── Queries/
-│   │   │   ├── Validators/
-│   │   ├── Comments/
-│   │   │   ├── Commands/
-│   │   │   ├── Queries/
-│   │   │   ├── Validators/
-│   │   ├── Organizations/
-│   │   │   ├── Commands/
-│   │   │   ├── Queries/
-│   │   │   ├── Validators/
-│   │   ├── Campaigns/
-│   │   │   ├── Commands/
-│   │   │   ├── Queries/
-│   │   │   ├── Validators/
-│   │   ├── Donations/
-│   │   │   ├── Commands/
-│   │   │   ├── Queries/
-│   │   │   ├── Validators/
-│   │   ├── Notifications/
-│   │   │   ├── Commands/
-│   │   │   ├── Queries/
-│   │   │   ├── Validators/
-│   │   ├── Localizations/
-│   │   │   ├── Commands/
-│   │   │   ├── Queries/
-│   │   │   ├── Validators/
 │   ├── Interfaces/
-│   │   ├── IGenericRepository.cs
-│   │   ├── ICampaignService.cs
-│   │   ├── IDonationService.cs
-│   │   ├── IPaymentGateway.cs
-│   │   ├── IPushNotificationService.cs
-│   │   ├── ITokenService.cs
-│   │   ├── IPasswordHasher.cs
-│   │   ├── ICacheService.cs
-│   │   ├── IEmailService.cs
-│   │   ├── ILocalizationService.cs
 │   ├── Models/
-│   │   ├── Requests/
-│   │   │   ├── LoginRequest.cs
-│   │   │   ├── RegisterRequest.cs
-│   │   │   ├── RefreshTokenRequest.cs
-│   │   │   ├── LogoutRequest.cs
-│   │   │   ├── TranslationRequest.cs
-│   │   │   ├── DeviceTokenRequest.cs
-│   │   │   ├── FeatureRequest.cs
-│   │   │   ├── PaymentRequest.cs
-│   │   │   ├── RefundRequest.cs
-│   │   │   ├── RejectionReason.cs
-│   │   │   ├── SubscriptionRequest.cs
-│   │   ├── Responses/
-│   │   │   ├── AuthResponse.cs
-│   │   │   ├── ValidationErrorResponse.cs
-│   │   │   ├── ApiResponse.cs
-│   │   │   ├── PagedResponse.cs
 │   ├── ApplicationServiceRegistration.cs
 │
 ├── RaiseYourVoice.Domain/
 │   ├── Common/
-│   │   ├── BaseEntity.cs
-│   │   ├── ValueObject.cs
-│   │   ├── AuditableEntity.cs
 │   ├── Entities/
-│   │   ├── User.cs
-│   │   ├── Post.cs
-│   │   ├── Comment.cs
-│   │   ├── Organization.cs
-│   │   ├── Campaign.cs
-│   │   ├── Donation.cs
-│   │   ├── Notification.cs
-│   │   ├── RefreshToken.cs
-│   │   ├── LocalizationEntry.cs
 │   ├── Enums/
-│   │   ├── UserEnums.cs
-│   │   ├── PostEnums.cs
-│   │   ├── OrganizationEnums.cs
-│   │   ├── CampaignEnums.cs
-│   │   ├── PaymentEnums.cs
-│   │   ├── NotificationEnums.cs
 │   ├── Events/
-│   │   ├── DomainEvent.cs
-│   │   ├── UserCreatedEvent.cs
-│   │   ├── PostCreatedEvent.cs
-│   │   ├── DonationCompletedEvent.cs
 │
 ├── RaiseYourVoice.Infrastructure/
 │   ├── Persistence/
-│   │   ├── MongoDbContext.cs
-│   │   ├── MongoDbSettings.cs
-│   │   ├── Repositories/
-│   │   │   ├── MongoRepository.cs
-│   │   │   ├── UserRepository.cs
-│   │   │   ├── PostRepository.cs
-│   │   │   ├── CommentRepository.cs
-│   │   │   ├── OrganizationRepository.cs
-│   │   │   ├── CampaignRepository.cs
-│   │   │   ├── DonationRepository.cs
-│   │   │   ├── NotificationRepository.cs
-│   │   │   ├── RefreshTokenRepository.cs
-│   │   ├── Migrations/
 │   ├── Services/
-│   │   ├── CampaignService.cs
-│   │   ├── DonationService.cs
-│   │   ├── EmailService.cs
-│   │   ├── FileStorageService.cs
-│   │   ├── PaymentGatewayService.cs
-│   │   ├── PushNotificationService.cs
-│   │   ├── CacheService.cs
-│   │   ├── LocalizationService.cs
-│   │   ├── EventBus/
-│   │   │   ├── EventPublisher.cs
-│   │   │   ├── EventSubscriber.cs
 │   ├── Security/
-│   │   │   ├── EncryptionService.cs
-│   │   │   ├── TokenService.cs
-│   │   │   ├── PasswordHasher.cs
 │   ├── InfrastructureServiceRegistration.cs
 │
 ├── RaiseYourVoice.UnitTests/
 │   ├── Application/
-│   │   ├── Features/
-│   │   │   ├── Auth/
-│   │   │   ├── Users/
-│   │   │   ├── Posts/
-│   │   │   ├── Comments/
-│   │   │   ├── Organizations/
-│   │   │   ├── Campaigns/
-│   │   │   ├── Donations/
-│   │   │   ├── Notifications/
-│   │   │   ├── Localizations/
 │   ├── Domain/
 │   ├── Infrastructure/
 │   ├── TestFixtures/
 │
 ├── RaiseYourVoice.IntegrationTests/
 │   ├── API/
-│   │   ├── Controllers/
-│   │   ├── gRPC/
 │   ├── Application/
 │   ├── Infrastructure/
 │   ├── TestFixtures/
@@ -292,6 +119,8 @@ Backend/
   - Create like functionality
   - Implement media file handling
   - Create post filtering and search
+  - Add WebP/WebM conversion pipeline for uploaded media
+  - Implement CDN integration for media delivery
 
 - **Week 6**: Organizations and opportunities
   - Implement organization profile management
@@ -329,6 +158,8 @@ Backend/
   - Implement mobile-specific endpoints
   - Create optimized data transfer objects
   - Build service descriptors
+  - Add support for binary data streaming
+  - Implement compression for media transfers
 
 - **Week 11**: Caching and performance
   - Implement Redis caching layer
@@ -337,6 +168,8 @@ Backend/
   - Optimize database queries
   - Implement rate limiting
   - Set up Redis caching for server-side translations
+  - Add CDN caching policies for media assets
+  - Create optimized media delivery pipeline
 
 - **Week 12**: Search and analytics
   - Implement full-text search capabilities
@@ -461,6 +294,51 @@ Backend/
 - Centralized translation management API endpoints
 - Role-based access control for translation updates
 
+## File Storage and CDN Strategy
+
+- **Implementation Timeline**: 
+  - Week 5-6: Basic file upload/download API
+  - Week 7-8: Media optimization pipeline (WebP/WebM conversion)
+  - Week 9-10: CDN integration and caching policies
+  - Week 11-12: Advanced features (signed URLs, access control)
+
+- **Storage**:
+  - Use a dedicated file storage system (e.g., AWS S3, Azure Blob Storage, or a self-hosted MinIO instance).
+  - Store files (images, documents, videos) in a structured folder hierarchy based on entity types (e.g., `/posts/images/`, `/organizations/docs/`).
+  - Generate unique file names to avoid conflicts and ensure immutability.
+
+- **Serving Files**:
+  - Serve files through a CDN (e.g., AWS CloudFront, Azure CDN, or a self-hosted Nginx-based CDN).
+  - Use signed URLs for secure access to private files.
+  - Cache public files (e.g., images, videos) at the CDN edge for faster delivery.
+
+- **Integration**:
+  - Add a file upload API in the backend to handle file uploads securely.
+  - Validate file types and sizes during upload.
+  - Store metadata (e.g., file type, size, upload date) in the database for tracking.
+
+- **Performance**:
+  - Optimize images and videos during upload (e.g., convert to WebP/WebM formats).
+  - Generate multiple resolutions for responsive delivery.
+  - Add metadata extraction for improved searchability.
+  - Implement server-side media transformation API.
+
+- **Security**:
+  - Encrypt sensitive files at rest.
+  - Use HTTPS for all file transfers.
+  - Implement access control to restrict file access based on user roles.
+
+- **Backup**:
+  - Schedule regular backups of the file storage system.
+  - Store backups in a separate location for disaster recovery.
+
+- **Example Workflow**:
+  1. User uploads a file via the frontend.
+  2. The file is sent to the backend API.
+  3. The backend validates the file and uploads it to the storage system.
+  4. The backend returns a URL for accessing the file.
+  5. The frontend uses the URL to display or download the file.
+
 ## Key Rotation Implementation
 
 - Versioned encryption key management
@@ -525,16 +403,36 @@ Backend/
 - Test data generation
 - Continuous testing in CI pipeline
 
-## DevOps and Deployment
+## Deployment Strategy
 
-- Containerization with Docker
-- Orchestration with Docker Compose
-- CI/CD pipeline configuration
-- Environment-specific configuration
-- Deployment automation
-- Rollback strategies
-- Blue/green deployment support
-- Secret management
+- **Containerization**: Use Docker for building images locally.
+- **Orchestration**: Deploy using Kubernetes (K3s) for lightweight and efficient cluster management.
+- **Secrets Management**:
+  - Store sensitive data (e.g., database connection strings, API keys) in Kubernetes Secrets.
+  - Use `appsettings.json` as a fallback for local development.
+  - Mount secrets as environment variables or files in the container.
+- **Image Deployment**:
+  - Build Docker images locally.
+  - Package images and deployment files into a zip archive.
+  - Transfer the zip archive to the VPS using SSH (key-based authentication, no passwords).
+  - Extract and deploy using bash scripts for smoother automation.
+- **Domains**:
+  - Use `raiseyourvoice.al` for the web application.
+  - Use `api.raiseyourvoice.al` for the backend.
+- **Ingress**:
+  - Use Nginx Ingress Controller for routing traffic.
+  - Configure Let's Encrypt for SSL certificates using Cert-Manager.
+- **Pipeline**:
+  - Use a shared CI/CD pipeline for both web and backend deployments.
+  - Automate deployment steps with bash scripts for consistency.
+- **Scaling**:
+  - Configure Horizontal Pod Autoscaler (HPA) for dynamic scaling.
+  - Use resource requests and limits for efficient resource allocation.
+- **Backup and Recovery**:
+  - Implement persistent volume backups for MongoDB and Redis.
+  - Use Kubernetes CronJobs for scheduled backups.
+- **K3s Maintenance**:
+  - Regularly update K3s to ensure security and stability.
 
 ## Conclusion
 

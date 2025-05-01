@@ -9,6 +9,7 @@ This document outlines the development plan for the iOS application of the Raise
 - **Deployment Target**: iOS 15.0+
 - **Architecture**: MVVM (Model-View-ViewModel) with Clean Architecture principles
 - **UI Framework**: UIKit with SwiftUI components where appropriate
+- **Media Formats**: WebP for images, WebM for videos (preferred formats for performance and compatibility)
 - **Key Libraries & Frameworks**:
   - Combine for reactive programming
   - Swift Concurrency (async/await) for asynchronous operations
@@ -18,6 +19,12 @@ This document outlines the development plan for the iOS application of the Raise
   - Firebase for analytics and notifications
   - CoreLocation for location services
   - MapKit for map integration
+  - SDWebImage with WebP support for image loading
+  - GRPCSwift for gRPC communication with backend
+  - KingfisherWebP for WebP image support
+  - AVFoundation with WebM support for video playback
+  - Lottie for vector animations
+  - Hero for view controller transitions
 
 ## Project Structure
 
@@ -111,6 +118,8 @@ RaiseYourVoice/
   - Create JWT authentication handling
   - Set up request/response interceptors
   - Implement error handling and offline detection
+  - Set up gRPC client for efficient mobile communication
+  - Implement support for receiving encrypted API paths
 
 ### Phase 2: Core Features (Weeks 5-10)
 - **Week 5-6**: Social Feed tab
@@ -118,7 +127,9 @@ RaiseYourVoice/
   - Create custom cells for different post types
   - Implement post interaction (like, comment)
   - Add post creation flow
-  - Implement media handling (photos, videos)
+  - Add media handling (images, videos) with WebP/WebM format support
+  - Implement file upload functionality with progress indicators
+  - Add client-side image optimization before upload
 
 - **Week 7**: Opportunities tab
   - Create list and calendar views for events
@@ -164,11 +175,14 @@ RaiseYourVoice/
   - Add conflict resolution logic
   - Implement background fetch capabilities
 
-- **Week 14**: Multilingual support
+- **Week 14**: Multilingual support and animations
   - Set up localization for English and Albanian
   - Implement runtime language switching
   - Create localized assets
   - Add accessibility enhancements
+  - Implement polished animations throughout the app
+  - Add custom transitions between screens
+  - Create micro-interactions for UI elements
 
 ### Phase 4: Finalization (Weeks 15-16)
 - **Week 15**: Security and testing
@@ -196,13 +210,21 @@ RaiseYourVoice/
 - Secure app state handling
 
 ## Integration Points
-- gRPC client implementation for backend communication
-- WebSocket integration for real-time features
-- Apple Push Notification Service (APNs)
-- Sign in with Apple
-- Google Sign-In SDK
-- MapKit integration
-- Social sharing frameworks
+- gRPC communication with backend services
+- WebSocket integration for real-time notifications
+- Content delivery network integration for media
+- Analytics integration for user behavior tracking
+- Crash reporting with Firebase Crashlytics
+- Push notification services
+- WebP/WebM media format support for optimal performance
+
+## Media Handling
+- Implement WebP image loading and caching
+- Support WebM video playback
+- Add media compression before upload
+- Create thumbnail generation for shared content
+- Implement progressive image loading
+- Add support for offline media caching
 
 ## Accessibility Features
 - VoiceOver compatibility
@@ -212,6 +234,20 @@ RaiseYourVoice/
 - Audio descriptions where appropriate
 - Keyboard navigation support
 - Caption support for video content
+
+## Animation Strategy
+- Use UIKit dynamics for physics-based animations
+- Implement Hero for seamless view controller transitions
+- Apply spring animations for natural and responsive feedback
+- Create custom keyframe animations for complex sequences
+- Use Lottie for high-quality vector animations
+- Implement shared element transitions between view controllers
+- Apply subtle animation effects for UI state changes
+- Create branded animations for the splash screen and key moments
+- Ensure animations respect reduced motion accessibility settings
+- Implement haptic feedback paired with animations for an immersive experience
+- Use CoreAnimation for performance-critical animations
+- Apply consistent timing and easing curves app-wide for a cohesive feel
 
 ## Testing Strategy
 - Unit tests using XCTest
