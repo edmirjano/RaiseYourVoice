@@ -8,6 +8,7 @@ using RaiseYourVoice.Infrastructure.Services.Security;
 using RaiseYourVoice.Infrastructure.Persistence;
 using RaiseYourVoice.Infrastructure.Security;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.RateLimiting; // Added missing namespace for rate limiting
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -108,9 +109,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    var serviceProvider = builder.Services.BuildServiceProvider();
-    var keyManager = serviceProvider.GetRequiredService<JwtKeyManager>();
-
+    // Configure JWT Bearer token validation - we'll get the actual keys from the key manager when needed
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -119,18 +118,23 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKeys = keyManager.GetAllSigningKeys(), // Use all keys from the key manager
         ClockSkew = TimeSpan.Zero // Recommended for refresh token scenarios to avoid overlap
     };
 
     options.Events = new JwtBearerEvents
     {
+        OnTokenValidated = context =>
+        {
+            var keyManager = context.HttpContext.RequestServices.GetRequiredService<JwtKeyManager>();
+            options.TokenValidationParameters.IssuerSigningKeys = keyManager.GetAllSigningKeys();
+            return Task.CompletedTask;
+        },
         OnAuthenticationFailed = context =>
         {
             if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
             {
                 // Add a custom header to indicate token expiration
-                context.Response.Headers.Add("Token-Expired", "true");
+                context.Response.Headers.Append("Token-Expired", "true");
             }
             return Task.CompletedTask;
         },
@@ -155,18 +159,13 @@ builder.Services.AddRateLimiter(options =>
         options.AutoReplenishment = true;
         options.PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100");
         options.Window = TimeSpan.FromMinutes(1);
-        options.QueueProcessingOrder = Microsoft.AspNetCore.RateLimiting.QueueProcessingOrder.OldestFirst;
         options.QueueLimit = 0; // No queuing, just reject when limit is hit
     });
 });
 
 // Configure Health Checks
 builder.Services.AddHealthChecks()
-    .AddMongoDb(
-        connectionString: builder.Configuration["MongoDbSettings:ConnectionString"] ?? throw new InvalidOperationException("MongoDB connection string is not configured."),
-        name: "mongodb",
-        failureStatus: HealthStatus.Degraded,
-        tags: new[] { "db", "mongodb" })
+    .AddMongoDb()
     .AddRedis(
         redisConnectionString: builder.Configuration.GetConnectionString("RedisConnection") ?? throw new InvalidOperationException("Redis connection string is not configured."),
         name: "redis",

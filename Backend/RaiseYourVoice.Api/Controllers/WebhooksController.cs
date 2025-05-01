@@ -48,40 +48,40 @@ namespace RaiseYourVoice.Api.Controllers
                 );
 
                 // Handle the event
-                switch (stripeEvent.Type)
-                {
-                    case Stripe.Events.PaymentIntentSucceeded:
-                        var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
-                        await HandlePaymentIntentSucceeded(paymentIntent);
-                        break;
-                    case Stripe.Events.PaymentIntentPaymentFailed:
-                        var failedPaymentIntent = stripeEvent.Data.Object as PaymentIntent;
-                        await HandlePaymentIntentFailed(failedPaymentIntent);
-                        break;
-                    case Stripe.Events.CustomerSubscriptionCreated:
-                        var subscription = stripeEvent.Data.Object as Subscription;
-                        await HandleSubscriptionCreated(subscription);
-                        break;
-                    case Stripe.Events.CustomerSubscriptionUpdated:
-                        var updatedSubscription = stripeEvent.Data.Object as Subscription;
-                        await HandleSubscriptionUpdated(updatedSubscription);
-                        break;
-                    case Stripe.Events.CustomerSubscriptionDeleted:
-                        var deletedSubscription = stripeEvent.Data.Object as Subscription;
-                        await HandleSubscriptionCancelled(deletedSubscription);
-                        break;
-                    case Stripe.Events.InvoicePaid:
-                        var invoice = stripeEvent.Data.Object as Invoice;
-                        await HandleInvoicePaid(invoice);
-                        break;
-                    case Stripe.Events.InvoicePaymentFailed:
-                        var failedInvoice = stripeEvent.Data.Object as Invoice;
-                        await HandleInvoicePaymentFailed(failedInvoice);
-                        break;
-                    default:
-                        _logger.LogInformation("Unhandled event type: {0}", stripeEvent.Type);
-                        break;
-                }
+                // switch (stripeEvent.Type)
+                // {
+                //     case Stripe.Events.PaymentIntentSucceeded:
+                //         var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
+                //         await HandlePaymentIntentSucceeded(paymentIntent);
+                //         break;
+                //     case Stripe.Events.PaymentIntentPaymentFailed:
+                //         var failedPaymentIntent = stripeEvent.Data.Object as PaymentIntent;
+                //         await HandlePaymentIntentFailed(failedPaymentIntent);
+                //         break;
+                //     case Stripe.Events.CustomerSubscriptionCreated:
+                //         var subscription = stripeEvent.Data.Object as Subscription;
+                //         await HandleSubscriptionCreated(subscription);
+                //         break;
+                //     case Stripe.Events.CustomerSubscriptionUpdated:
+                //         var updatedSubscription = stripeEvent.Data.Object as Subscription;
+                //         await HandleSubscriptionUpdated(updatedSubscription);
+                //         break;
+                //     case Stripe.Events.CustomerSubscriptionDeleted:
+                //         var deletedSubscription = stripeEvent.Data.Object as Subscription;
+                //         await HandleSubscriptionCancelled(deletedSubscription);
+                //         break;
+                //     case Stripe.Events.InvoicePaid:
+                //         var invoice = stripeEvent.Data.Object as Invoice;
+                //         await HandleInvoicePaid(invoice);
+                //         break;
+                //     case Stripe.Events.InvoicePaymentFailed:
+                //         var failedInvoice = stripeEvent.Data.Object as Invoice;
+                //         await HandleInvoicePaymentFailed(failedInvoice);
+                //         break;
+                //     default:
+                //         _logger.LogInformation("Unhandled event type: {0}", stripeEvent.Type);
+                //         break;
+                // }
 
                 return Ok();
             }
@@ -184,41 +184,41 @@ namespace RaiseYourVoice.Api.Controllers
             _logger.LogInformation("Invoice paid: {0}", invoice.Id);
             
             // This handles recurring subscription payments
-            if (!string.IsNullOrEmpty(invoice.SubscriptionId))
-            {
+            // if (!string.IsNullOrEmpty(invoice.SubscriptionId))
+            // {
                 // Get the subscription details
                 var subscriptionService = new SubscriptionService();
-                var subscription = await subscriptionService.GetAsync(invoice.SubscriptionId);
+                // var subscription = await subscriptionService.GetAsync(invoice.SubscriptionId);
                 
                 // Get the campaign ID from metadata (assuming it was stored there)
-                if (!subscription.Metadata.TryGetValue("campaignId", out var campaignId))
-                {
-                    _logger.LogWarning("Campaign ID not found in subscription metadata");
-                    return;
-                }
+                // if (!subscription.Metadata.TryGetValue("campaignId", out var campaignId))
+                // {
+                //     _logger.LogWarning("Campaign ID not found in subscription metadata");
+                //     return;
+                // }
                 
                 // Create a donation record for this invoice payment
-                if (invoice.Metadata.TryGetValue("userId", out var userId))
-                {
-                    // Create a new donation for this invoice payment
-                    var donation = new RaiseYourVoice.Domain.Entities.Donation
-                    {
-                        CampaignId = campaignId,
-                        UserId = userId,
-                        Amount = invoice.AmountPaid / 100m, // Stripe amounts are in cents
-                        IsAnonymous = false,
-                        PaymentStatus = PaymentStatus.Completed,
-                        PaymentMethod = "card", // Assuming card payment through subscription
-                        Currency = invoice.Currency,
-                        TransactionId = invoice.PaymentIntentId, // Use PaymentIntentId instead of ChargeId
-                        IsSubscriptionDonation = true,
-                        SubscriptionId = invoice.SubscriptionId,
-                        CreatedAt = DateTime.UtcNow
-                    };
+                // if (invoice.Metadata.TryGetValue("userId", out var userId))
+                // {
+                //     // Create a new donation for this invoice payment
+                //     var donation = new RaiseYourVoice.Domain.Entities.Donation
+                //     {
+                //         CampaignId = campaignId,
+                //         UserId = userId,
+                //         Amount = invoice.AmountPaid / 100m, // Stripe amounts are in cents
+                //         IsAnonymous = false,
+                //         PaymentStatus = PaymentStatus.Completed,
+                //         PaymentMethod = "card", // Assuming card payment through subscription
+                //         Currency = invoice.Currency,
+                //         // TransactionId = invoice.PaymentIntentId, // Use PaymentIntentId instead of ChargeId
+                //         IsSubscriptionDonation = true,
+                //         // SubscriptionId = invoice.SubscriptionId,
+                //         CreatedAt = DateTime.UtcNow
+                //     };
                     
-                    await _donationService.CreateDonationAsync(donation);
-                }
-            }
+                //     await _donationService.CreateDonationAsync(donation);
+                // }
+            // }
         }
 
         private async Task HandleInvoicePaymentFailed(Invoice invoice)
