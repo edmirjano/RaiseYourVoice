@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RaiseYourVoice.Application.Interfaces;
+using RaiseYourVoice.Application.Models.Requests;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -79,14 +80,5 @@ namespace RaiseYourVoice.Api.Controllers
             
             return BadRequest(new { message = "Failed to save translation" });
         }
-    }
-    
-    public class TranslationRequest
-    {
-        public string Key { get; set; }
-        public string Language { get; set; }
-        public string Value { get; set; }
-        public string Category { get; set; }
-        public string Description { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RaiseYourVoice.Application.Interfaces;
+using RaiseYourVoice.Application.Models.Requests;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;
 
@@ -243,17 +244,5 @@ namespace RaiseYourVoice.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
-    }
-
-    public class RefundRequest
-    {
-        public string Reason { get; set; }
-    }
-
-    public class SubscriptionRequest
-    {
-        public string CampaignId { get; set; }
-        public decimal Amount { get; set; }
-        public string PaymentMethodId { get; set; }
     }
 }

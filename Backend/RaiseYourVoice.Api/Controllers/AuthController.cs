@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RaiseYourVoice.Application.Interfaces;
+using RaiseYourVoice.Application.Models.Requests;
+using RaiseYourVoice.Application.Models.Responses;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;
 using System;
@@ -160,42 +162,5 @@ namespace RaiseYourVoice.Api.Controllers
 
             return Ok(new { message = "Successfully logged out" });
         }
-    }
-
-    public class RegisterRequest
-    {
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public string ProfilePicture { get; set; }
-        public string Bio { get; set; }
-        public string PreferredLanguage { get; set; }
-    }
-
-    public class LoginRequest
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-    }
-
-    public class RefreshTokenRequest
-    {
-        public string Token { get; set; }
-        public string RefreshToken { get; set; }
-    }
-
-    public class LogoutRequest
-    {
-        public string RefreshToken { get; set; }
-    }
-
-    public class AuthResponse
-    {
-        public string UserId { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public UserRole Role { get; set; }
-        public string Token { get; set; }
-        public string RefreshToken { get; set; }
     }
 }

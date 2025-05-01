@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RaiseYourVoice.Application.Interfaces;
+using RaiseYourVoice.Application.Models.Requests;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;
 
@@ -248,15 +249,5 @@ namespace RaiseYourVoice.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
-    }
-
-    public class RejectionReason
-    {
-        public string Reason { get; set; }
-    }
-
-    public class FeatureRequest
-    {
-        public bool Featured { get; set; }
     }
 }

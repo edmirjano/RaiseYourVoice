@@ -15,7 +15,7 @@ This document outlines the development plan for the backend services of the Rais
 - **Authentication**: JWT with refresh tokens
 - **Containerization**: Docker
 - **CI/CD**: GitHub Actions
-- **Localization**: Server-side translation with language header support
+- **Localization**: Server-side translation with language header support and Redis caching
 - **Key Libraries & Frameworks**:
   - MediatR for CQRS pattern
   - FluentValidation for validation
@@ -36,6 +36,7 @@ Backend/
 ├── RaiseYourVoice.Api/
 │   ├── Controllers/
 │   │   ├── AuthController.cs
+│   │   ├── BaseApiController.cs
 │   │   ├── UsersController.cs
 │   │   ├── PostsController.cs
 │   │   ├── CommentsController.cs
@@ -44,10 +45,15 @@ Backend/
 │   │   ├── DonationsController.cs
 │   │   ├── NotificationsController.cs
 │   │   ├── WebhooksController.cs
+│   │   ├── LocalizationsController.cs
 │   ├── Middleware/
 │   │   ├── ErrorHandlingMiddleware.cs
 │   │   ├── ApiKeyMiddleware.cs
 │   │   ├── RateLimitingMiddleware.cs
+│   │   ├── LocalizationMiddleware.cs
+│   │   ├── LocalizationMiddlewareExtensions.cs
+│   │   ├── SecurityHeadersMiddleware.cs
+│   │   ├── SecurityHeadersMiddlewareExtensions.cs
 │   ├── Filters/
 │   │   ├── ApiExceptionFilter.cs
 │   │   ├── ValidationFilter.cs
@@ -58,14 +64,13 @@ Backend/
 │   │   │   ├── PostService.cs
 │   │   │   ├── NotificationService.cs
 │   │   │   ├── OrganizationService.cs
-│   │   ├── Protos/
+│   ├── Protos/
 │   │   │   ├── auth.proto
 │   │   │   ├── user.proto
 │   │   │   ├── post.proto
 │   │   │   ├── comment.proto
 │   │   │   ├── notification.proto
 │   │   │   ├── organization.proto
-│   ├── Startup.cs
 │   ├── Program.cs
 │   ├── appsettings.json
 │   ├── appsettings.Development.json
@@ -121,23 +126,39 @@ Backend/
 │   │   │   ├── Commands/
 │   │   │   ├── Queries/
 │   │   │   ├── Validators/
+│   │   ├── Localizations/
+│   │   │   ├── Commands/
+│   │   │   ├── Queries/
+│   │   │   ├── Validators/
 │   ├── Interfaces/
 │   │   ├── IGenericRepository.cs
 │   │   ├── ICampaignService.cs
 │   │   ├── IDonationService.cs
 │   │   ├── IPaymentGateway.cs
 │   │   ├── IPushNotificationService.cs
-│   │   ├── IAuthService.cs
+│   │   ├── ITokenService.cs
+│   │   ├── IPasswordHasher.cs
 │   │   ├── ICacheService.cs
 │   │   ├── IEmailService.cs
-│   ├── DTOs/
-│   │   ├── UserDto.cs
-│   │   ├── PostDto.cs
-│   │   ├── CommentDto.cs
-│   │   ├── OrganizationDto.cs
-│   │   ├── CampaignDto.cs
-│   │   ├── DonationDto.cs
-│   │   ├── NotificationDto.cs
+│   │   ├── ILocalizationService.cs
+│   ├── Models/
+│   │   ├── Requests/
+│   │   │   ├── LoginRequest.cs
+│   │   │   ├── RegisterRequest.cs
+│   │   │   ├── RefreshTokenRequest.cs
+│   │   │   ├── LogoutRequest.cs
+│   │   │   ├── TranslationRequest.cs
+│   │   │   ├── DeviceTokenRequest.cs
+│   │   │   ├── FeatureRequest.cs
+│   │   │   ├── PaymentRequest.cs
+│   │   │   ├── RefundRequest.cs
+│   │   │   ├── RejectionReason.cs
+│   │   │   ├── SubscriptionRequest.cs
+│   │   ├── Responses/
+│   │   │   ├── AuthResponse.cs
+│   │   │   ├── ValidationErrorResponse.cs
+│   │   │   ├── ApiResponse.cs
+│   │   │   ├── PagedResponse.cs
 │   ├── ApplicationServiceRegistration.cs
 │
 ├── RaiseYourVoice.Domain/
@@ -154,6 +175,7 @@ Backend/
 │   │   ├── Donation.cs
 │   │   ├── Notification.cs
 │   │   ├── RefreshToken.cs
+│   │   ├── LocalizationEntry.cs
 │   ├── Enums/
 │   │   ├── UserEnums.cs
 │   │   ├── PostEnums.cs
@@ -172,7 +194,7 @@ Backend/
 │   │   ├── MongoDbContext.cs
 │   │   ├── MongoDbSettings.cs
 │   │   ├── Repositories/
-│   │   │   ├── GenericRepository.cs
+│   │   │   ├── MongoRepository.cs
 │   │   │   ├── UserRepository.cs
 │   │   │   ├── PostRepository.cs
 │   │   │   ├── CommentRepository.cs
@@ -180,9 +202,9 @@ Backend/
 │   │   │   ├── CampaignRepository.cs
 │   │   │   ├── DonationRepository.cs
 │   │   │   ├── NotificationRepository.cs
+│   │   │   ├── RefreshTokenRepository.cs
 │   │   ├── Migrations/
 │   ├── Services/
-│   │   ├── AuthService.cs
 │   │   ├── CampaignService.cs
 │   │   ├── DonationService.cs
 │   │   ├── EmailService.cs
@@ -190,10 +212,11 @@ Backend/
 │   │   ├── PaymentGatewayService.cs
 │   │   ├── PushNotificationService.cs
 │   │   ├── CacheService.cs
+│   │   ├── LocalizationService.cs
 │   │   ├── EventBus/
 │   │   │   ├── EventPublisher.cs
 │   │   │   ├── EventSubscriber.cs
-│   │   ├── Security/
+│   ├── Security/
 │   │   │   ├── EncryptionService.cs
 │   │   │   ├── TokenService.cs
 │   │   │   ├── PasswordHasher.cs
@@ -210,6 +233,7 @@ Backend/
 │   │   │   ├── Campaigns/
 │   │   │   ├── Donations/
 │   │   │   ├── Notifications/
+│   │   │   ├── Localizations/
 │   ├── Domain/
 │   ├── Infrastructure/
 │   ├── TestFixtures/
@@ -258,6 +282,7 @@ Backend/
   - Configure environment-specific settings
   - Create health check endpoints
   - Implement request/response logging
+  - Create localization middleware for language header processing
 
 ### Phase 2: Core Business Logic (Weeks 5-8)
 
@@ -311,6 +336,7 @@ Backend/
   - Build performance monitoring
   - Optimize database queries
   - Implement rate limiting
+  - Set up Redis caching for server-side translations
 
 - **Week 12**: Search and analytics
   - Implement full-text search capabilities
@@ -410,6 +436,20 @@ Backend/
 - Cache entry compression
 - Cache hit/miss monitoring
 - Rate limiting implementation
+- Translation caching with language-based keys
+
+## Localization Implementation
+
+- Server-side translation system with MongoDB storage
+- Accept-Language header processing via middleware
+- Multi-level caching strategy:
+  - In-memory cache for ultra-fast access
+  - Redis distributed cache with expiration policies
+- MongoDB collection with compound indexes for key-language lookups
+- Language fallback mechanism (to English)
+- Category-based translation organization
+- Centralized translation management API endpoints
+- Role-based access control for translation updates
 
 ## gRPC Service Design
 
@@ -421,6 +461,7 @@ Backend/
 - Performance optimization
 - Mobile-specific optimizations
 - Connection management
+- Language preference handling for localized responses
 
 ## Monitoring and Logging
 
@@ -457,4 +498,4 @@ Backend/
 
 ## Conclusion
 
-This backend development plan provides a comprehensive roadmap for implementing the server-side components of the RaiseYourVoice platform. Following Clean Architecture principles and leveraging the latest .NET capabilities, this implementation will create a secure, scalable, and maintainable backend that meets all the specified requirements while providing optimal performance for both web and mobile clients.
+This backend development plan provides a comprehensive roadmap for implementing the server-side components of the RaiseYourVoice platform. Following Clean Architecture principles and leveraging the latest .NET capabilities, this implementation will create a secure, scalable, and maintainable backend that meets all the specified requirements while providing optimal performance for both web and mobile clients. The server-side translation system with language header support enables seamless multilingual experiences across all client applications while maintaining centralized management of translations.

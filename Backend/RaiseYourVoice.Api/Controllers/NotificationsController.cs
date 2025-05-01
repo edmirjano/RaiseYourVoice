@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RaiseYourVoice.Application.Interfaces;
+using RaiseYourVoice.Application.Models.Requests;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;
 using System;
@@ -208,11 +209,5 @@ namespace RaiseYourVoice.Api.Controllers
                 // Additional targeting options could be implemented here
             }
         }
-    }
-    
-    public class DeviceTokenRequest
-    {
-        public string DeviceToken { get; set; }
-        public string DeviceType { get; set; } // e.g., "ios", "android"
     }
 }
