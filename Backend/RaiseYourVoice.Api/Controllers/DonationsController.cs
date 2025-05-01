@@ -107,12 +107,12 @@ namespace RaiseYourVoice.Api.Controllers
                     {
                         Email = paymentRequest.CustomerInfo.Email,
                         FullName = paymentRequest.CustomerInfo.FullName,
-                        Address = paymentRequest.CustomerInfo.BillingAddress ?? "",
+                        Address = paymentRequest.CustomerInfo.Address ?? "",
                         City = paymentRequest.CustomerInfo.City ?? "",
                         State = paymentRequest.CustomerInfo.City ?? "",
                         Country = paymentRequest.CustomerInfo.Country ?? "US",
                         PostalCode = paymentRequest.CustomerInfo.PostalCode ?? "",
-                        Phone = paymentRequest.CustomerInfo.PhoneNumber ?? "",
+                        Phone = paymentRequest.CustomerInfo.Phone ?? "",
                         IsTaxReceiptRequested = true
                     };
                 }

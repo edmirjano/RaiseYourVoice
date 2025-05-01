@@ -6,9 +6,9 @@ namespace RaiseYourVoice.Domain.Entities
     public class Donation : BaseEntity
     {
         public required string CampaignId { get; set; }
-        public required Campaign Campaign { get; set; }
+        public Campaign Campaign { get; set; }
         public required string UserId { get; set; }
-        public required User User { get; set; }
+        public User User { get; set; }
         public decimal Amount { get; set; }
         public bool IsAnonymous { get; set; }
         public string? Message { get; set; }
