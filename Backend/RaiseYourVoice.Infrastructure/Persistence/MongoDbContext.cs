@@ -22,6 +22,9 @@ namespace RaiseYourVoice.Infrastructure.Persistence
         public IMongoCollection<Comment> Comments => _database.GetCollection<Comment>("Comments");
         public IMongoCollection<Organization> Organizations => _database.GetCollection<Organization>("Organizations");
         public IMongoCollection<Notification> Notifications => _database.GetCollection<Notification>("Notifications");
+        public IMongoCollection<Campaign> Campaigns => _database.GetCollection<Campaign>("Campaigns");
+        public IMongoCollection<Donation> Donations => _database.GetCollection<Donation>("Donations");
+        public IMongoCollection<RefreshToken> RefreshTokens => _database.GetCollection<RefreshToken>("RefreshTokens");
     }
 
     public class MongoDbSettings

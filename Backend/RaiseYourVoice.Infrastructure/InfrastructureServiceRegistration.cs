@@ -5,6 +5,7 @@ using RaiseYourVoice.Domain.Common;
 using RaiseYourVoice.Infrastructure.Persistence;
 using RaiseYourVoice.Infrastructure.Persistence.Repositories;
 using RaiseYourVoice.Infrastructure.Services;
+using RaiseYourVoice.Infrastructure.Services.Security;
 using MongoDB.Driver;
 
 namespace RaiseYourVoice.Infrastructure
@@ -29,6 +30,10 @@ namespace RaiseYourVoice.Infrastructure
             services.AddScoped<IPushNotificationService, PushNotificationService>();
             services.AddScoped<ICampaignService, CampaignService>();
             services.AddScoped<IDonationService, DonationService>();
+
+            // Register security services
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
 
             // Configure payment gateway
             services.Configure<StripeSettings>(configuration.GetSection("Stripe"));

@@ -3,11 +3,17 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RaiseYourVoice.Infrastructure;
 using System.Text;
+using RaiseYourVoice.Api.Middleware;
+using RaiseYourVoice.Infrastructure.Services.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
+
+// Configure strongly typed settings objects
+var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
+builder.Services.Configure<JwtSettings>(jwtSettingsSection);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -39,6 +45,32 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
+    
+    // Add API Key definition for Swagger
+    c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        Description = "API Key Authentication",
+        Name = "X-API-Key",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "ApiKeyScheme"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "ApiKey"
+                },
+                In = ParameterLocation.Header
+            },
+            new string[] {}
+        }
+    });
 });
 
 // Add Infrastructure services
@@ -56,6 +88,9 @@ builder.Services.AddCors(options =>
 });
 
 // Configure JWT Authentication
+var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
+var key = Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]);
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -71,8 +106,21 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]))
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ClockSkew = TimeSpan.Zero // Recommended for refresh token scenarios to avoid overlap
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+            {
+                // Add a custom header to indicate token expiration
+                context.Response.Headers.Add("Token-Expired", "true");
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -84,7 +132,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
             factory: _ => new Microsoft.AspNetCore.RateLimiting.FixedWindowRateLimiterOptions
             {
-                PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"]),
+                PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100"),
                 Window = TimeSpan.FromMinutes(1),
                 QueueProcessingOrder = Microsoft.AspNetCore.RateLimiting.QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
@@ -105,7 +153,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Add global error handling middleware (should be first in the pipeline)
+app.UseErrorHandling();
+
 app.UseHttpsRedirection();
+
+// Add security headers middleware
+app.UseSecurityHeaders();
+
+// Add API key validation middleware
+app.UseApiKeyValidation();
+
 app.UseRateLimiter();
 app.UseCors("AllowAll");
 app.UseAuthentication();
