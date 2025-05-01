@@ -4,10 +4,10 @@ namespace RaiseYourVoice.Domain.Entities
 {
     public class LocalizationEntry : BaseEntity
     {
-        public string Key { get; set; }
-        public string Language { get; set; }
-        public string Value { get; set; }
-        public string Category { get; set; }
-        public string Description { get; set; }
+        public required string Key { get; set; }
+        public required string Language { get; set; }
+        public required string Value { get; set; }
+        public required string Category { get; set; }
+        public required string Description { get; set; }
     }
 }

@@ -11,12 +11,12 @@ namespace RaiseYourVoice.Application.Models.Requests
         /// The expired JWT token
         /// </summary>
         [Required]
-        public string Token { get; set; }
+        public required string Token { get; set; }
         
         /// <summary>
         /// The refresh token associated with the expired JWT
         /// </summary>
         [Required]
-        public string RefreshToken { get; set; }
+        public required string RefreshToken { get; set; }
     }
 }

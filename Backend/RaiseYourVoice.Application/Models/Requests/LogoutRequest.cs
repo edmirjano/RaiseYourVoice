@@ -8,6 +8,6 @@ namespace RaiseYourVoice.Application.Models.Requests
         /// <summary>
         /// The refresh token to revoke during logout
         /// </summary>
-        public string RefreshToken { get; set; }
+        public required string RefreshToken { get; set; }
     }
 }

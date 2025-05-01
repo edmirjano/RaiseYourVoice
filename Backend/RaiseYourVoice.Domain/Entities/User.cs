@@ -7,20 +7,20 @@ namespace RaiseYourVoice.Domain.Entities
 {
     public class User : BaseEntity
     {
-        public string Name { get; set; }
+        public required string Name { get; set; }
         
         [Encrypted]
-        public string Email { get; set; }
+        public required string Email { get; set; }
         
         [Encrypted]
-        public string PasswordHash { get; set; }
+        public required string PasswordHash { get; set; }
         
         public UserRole Role { get; set; }
-        public string ProfilePicture { get; set; }
-        public string Bio { get; set; }
+        public string? ProfilePicture { get; set; }
+        public string? Bio { get; set; }
         public DateTime JoinDate { get; set; }
         public DateTime LastLogin { get; set; }
-        public string PreferredLanguage { get; set; }
+        public required string PreferredLanguage { get; set; } = "en";
         public NotificationSettings NotificationSettings { get; set; } = new NotificationSettings();
         public List<ExternalAuthProvider> ExternalAuthProviders { get; set; } = new List<ExternalAuthProvider>();
         
@@ -41,12 +41,12 @@ namespace RaiseYourVoice.Domain.Entities
     public class ExternalAuthProvider
     {
         public ExternalAuthType Type { get; set; }
-        public string ExternalId { get; set; }
-        public string ExternalUsername { get; set; }
+        public required string ExternalId { get; set; }
+        public required string ExternalUsername { get; set; }
         public DateTime ConnectedAt { get; set; }
         
         [Encrypted]
-        public string AccessToken { get; set; }
+        public required string AccessToken { get; set; }
         
         public DateTime? TokenExpiry { get; set; }
     }

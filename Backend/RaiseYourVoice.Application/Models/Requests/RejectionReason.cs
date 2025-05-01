@@ -11,6 +11,6 @@ namespace RaiseYourVoice.Application.Models.Requests
         /// The reason for rejecting the campaign
         /// </summary>
         [Required]
-        public string Reason { get; set; }
+        public required string Reason { get; set; }
     }
 }

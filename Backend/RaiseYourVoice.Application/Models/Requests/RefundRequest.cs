@@ -11,6 +11,6 @@ namespace RaiseYourVoice.Application.Models.Requests
         /// Reason for the refund
         /// </summary>
         [Required]
-        public string Reason { get; set; }
+        public required string Reason { get; set; }
     }
 }

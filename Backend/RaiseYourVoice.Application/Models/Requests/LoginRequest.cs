@@ -12,12 +12,12 @@ namespace RaiseYourVoice.Application.Models.Requests
         /// </summary>
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public required string Email { get; set; }
         
         /// <summary>
         /// User's password
         /// </summary>
         [Required]
-        public string Password { get; set; }
+        public required string Password { get; set; }
     }
 }

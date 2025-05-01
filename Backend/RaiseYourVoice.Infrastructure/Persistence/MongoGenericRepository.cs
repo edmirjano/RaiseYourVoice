@@ -27,7 +27,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence
             return await _collection.Find(expression).ToListAsync();
         }
 
-        public async Task<T> GetByIdAsync(string id)
+        public async Task<T?> GetByIdAsync(string id)
         {
             var filter = Builders<T>.Filter.Eq(doc => doc.Id, id);
             return await _collection.Find(filter).SingleOrDefaultAsync();

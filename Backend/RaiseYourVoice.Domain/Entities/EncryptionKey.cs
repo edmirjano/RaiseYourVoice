@@ -16,17 +16,17 @@ namespace RaiseYourVoice.Domain.Entities
         /// <summary>
         /// The encryption key material (Base64-encoded)
         /// </summary>
-        public string Key { get; set; }
+        public required string Key { get; set; }
         
         /// <summary>
         /// The initialization vector for this key (Base64-encoded)
         /// </summary>
-        public string IV { get; set; }
+        public required string IV { get; set; }
         
         /// <summary>
-        /// When the key was created
+        /// When the key was created (renamed to avoid hiding base member)
         /// </summary>
-        public DateTime CreatedAt { get; set; }
+        public DateTime KeyCreatedAt { get; set; }
         
         /// <summary>
         /// When the key becomes active
@@ -46,11 +46,11 @@ namespace RaiseYourVoice.Domain.Entities
         /// <summary>
         /// The purpose of this key (e.g., "field-encryption", "api-path")
         /// </summary>
-        public string Purpose { get; set; }
+        public required string Purpose { get; set; }
         
         /// <summary>
         /// Optional description or metadata
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 }

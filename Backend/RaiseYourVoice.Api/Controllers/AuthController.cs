@@ -51,7 +51,7 @@ namespace RaiseYourVoice.Api.Controllers
                 Bio = request.Bio,
                 JoinDate = DateTime.UtcNow,
                 LastLogin = DateTime.UtcNow,
-                PreferredLanguage = request.PreferredLanguage ?? "en",
+                PreferredLanguage = request.PreferredLanguage,
                 NotificationSettings = new NotificationSettings(),
                 CreatedAt = DateTime.UtcNow
             };
@@ -111,6 +111,11 @@ namespace RaiseYourVoice.Api.Controllers
             {
                 // Get user from token principal
                 var principal = _tokenService.GetPrincipalFromExpiredToken(request.Token);
+                if (principal == null || principal.Identity == null || string.IsNullOrEmpty(principal.Identity.Name))
+                {
+                    return Unauthorized("Invalid token");
+                }
+                
                 var userId = principal.Identity.Name;
 
                 // Validate refresh token
@@ -152,7 +157,11 @@ namespace RaiseYourVoice.Api.Controllers
         [Authorize]
         public async Task<IActionResult> Logout(LogoutRequest request)
         {
-            var userId = User.Identity.Name;
+            var userId = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User identity not found");
+            }
             
             if (!string.IsNullOrEmpty(request.RefreshToken))
             {

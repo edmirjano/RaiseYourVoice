@@ -6,13 +6,13 @@ namespace RaiseYourVoice.Domain.Entities
 {
     public class Notification : BaseEntity
     {
-        public string Title { get; set; }
-        public string Content { get; set; }
+        public required string Title { get; set; }
+        public required string Content { get; set; }
         public NotificationType Type { get; set; }
-        public string SentBy { get; set; }
+        public required string SentBy { get; set; }
         public DateTime SentAt { get; set; }
         public DateTime? ExpiresAt { get; set; }
-        public TargetAudience TargetAudience { get; set; }
+        public required TargetAudience TargetAudience { get; set; }
         public DeliveryStatus DeliveryStatus { get; set; }
         public ReadStatus ReadStatus { get; set; }
     }
@@ -20,9 +20,9 @@ namespace RaiseYourVoice.Domain.Entities
     public class TargetAudience
     {
         public TargetType Type { get; set; }
-        public string[] UserIds { get; set; }
-        public UserRole[] TargetRoles { get; set; }
-        public string[] Topics { get; set; }
-        public string[] Regions { get; set; }
+        public string[]? UserIds { get; set; }
+        public UserRole[]? TargetRoles { get; set; }
+        public string[]? Topics { get; set; }
+        public string[]? Regions { get; set; }
     }
 }

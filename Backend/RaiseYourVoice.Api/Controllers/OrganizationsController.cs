@@ -89,7 +89,7 @@ namespace RaiseYourVoice.Api.Controllers
             if (existingOrg.VerificationStatus != VerificationStatus.Verified && 
                 organization.VerificationStatus == VerificationStatus.Verified)
             {
-                organization.VerifiedBy = User.Identity.Name;
+                organization.VerifiedBy = User.Identity?.Name ?? "unknown";
                 organization.VerificationDate = DateTime.UtcNow;
             }
             
@@ -127,7 +127,7 @@ namespace RaiseYourVoice.Api.Controllers
             }
             
             organization.VerificationStatus = VerificationStatus.Verified;
-            organization.VerifiedBy = User.Identity.Name;
+            organization.VerifiedBy = User.Identity?.Name ?? "unknown";
             organization.VerificationDate = DateTime.UtcNow;
             organization.UpdatedAt = DateTime.UtcNow;
             

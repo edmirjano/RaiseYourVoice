@@ -38,7 +38,7 @@ namespace RaiseYourVoice.Application.Interfaces
         /// <param name="category">Optional category for grouping translations</param>
         /// <param name="description">Optional description providing context for translators</param>
         /// <returns>Success indicator</returns>
-        Task<bool> SetLocalizedStringAsync(string key, string language, string value, string category = null, string description = null);
+        Task<bool> SetLocalizedStringAsync(string key, string language, string value, string? category = null, string? description = null);
         
         /// <summary>
         /// Retrieves translations by category

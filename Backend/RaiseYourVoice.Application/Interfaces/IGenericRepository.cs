@@ -10,7 +10,7 @@ namespace RaiseYourVoice.Application.Interfaces
     {
         Task<IEnumerable<T>> GetAllAsync();
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> expression);
-        Task<T> GetByIdAsync(string id);
+        Task<T?> GetByIdAsync(string id);
         Task<T> AddAsync(T entity);
         Task<bool> UpdateAsync(T entity);
         Task<bool> DeleteAsync(string id);
