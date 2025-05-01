@@ -400,6 +400,16 @@ Backend/
 
 ### Data Protection
 - Field-level encryption for sensitive data
+  - AES-256 encryption for sensitive fields
+  - Entity-level attribute markers with `[Encrypted]` attribute
+  - MongoDB serialization support through custom conventions
+  - Versioned encryption keys for secure key rotation
+- Automatic key rotation system
+  - Versioned encryption keys stored in MongoDB
+  - Transparent encryption/decryption with key version awareness
+  - Background service for scheduled key rotation
+  - Configurable rotation intervals and policies
+  - Key activation and deactivation controls
 - Encryption at rest for database
 - TLS for all communications
 - API path encryption
@@ -451,6 +461,36 @@ Backend/
 - Centralized translation management API endpoints
 - Role-based access control for translation updates
 
+## Key Rotation Implementation
+
+- Versioned encryption key management
+  - Each encryption key has a version number and purpose
+  - Keys stored securely in MongoDB with proper indexing
+  - Multiple key versions can coexist, with only one active per purpose
+  - Encrypted data includes key version metadata to allow decryption with the correct key
+
+- Key lifecycle management
+  - Keys move through creation, activation, expiration, and retirement phases
+  - Grace periods allow for smooth key transitions without disrupting the application
+  - Old keys remain available for decryption but are no longer used for encryption
+  - Automatic periodic rotation based on configurable settings
+
+- Scheduled background rotation service
+  - Background hosted service that periodically checks for key rotation requirements
+  - Automatic generation of new keys before old ones expire
+  - Configurable rotation intervals based on security policies
+  - Health monitoring and logging of rotation events
+
+- Encryption format
+  - Data encrypted with the format: `{keyVersion}:{encryptedBase64}` 
+  - Format allows transparent key version identification during decryption
+  - Backward compatibility with non-versioned encryption
+
+- Key caching strategy
+  - In-memory cache of decryption keys to minimize database lookups
+  - Automatic cache invalidation on key changes
+  - Thread-safe key access for high-performance scenarios
+
 ## gRPC Service Design
 
 - Efficient serialization with Protocol Buffers
@@ -498,4 +538,8 @@ Backend/
 
 ## Conclusion
 
-This backend development plan provides a comprehensive roadmap for implementing the server-side components of the RaiseYourVoice platform. Following Clean Architecture principles and leveraging the latest .NET capabilities, this implementation will create a secure, scalable, and maintainable backend that meets all the specified requirements while providing optimal performance for both web and mobile clients. The server-side translation system with language header support enables seamless multilingual experiences across all client applications while maintaining centralized management of translations.
+This backend development plan provides a comprehensive roadmap for implementing the server-side components of the RaiseYourVoice platform. Following Clean Architecture principles and leveraging the latest .NET capabilities, this implementation will create a secure, scalable, and maintainable backend that meets all the specified requirements while providing optimal performance for both web and mobile clients. 
+
+The server-side translation system with language header support enables seamless multilingual experiences across all client applications while maintaining centralized management of translations. The field-level encryption system with automatic key rotation provides strong security for sensitive data without compromising application performance or requiring manual key management processes.
+
+With the field-level encryption, API path encryption, and key rotation features already implemented, the platform has a strong security foundation that exceeds industry standards for data protection and access control.

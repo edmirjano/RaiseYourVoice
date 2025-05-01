@@ -77,6 +77,9 @@ builder.Services.AddSwaggerGen(c =>
 // Add Infrastructure services
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
+// Add API Path Encryption services
+builder.Services.AddApiPathEncryption(builder.Configuration);
+
 // Add CORS policy
 builder.Services.AddCors(options =>
 {
@@ -164,6 +167,9 @@ app.UseSecurityHeaders();
 
 // Add localization middleware
 app.UseLocalization();
+
+// Add API path encryption middleware
+app.UseApiPathEncryption();
 
 // Add API key validation middleware
 app.UseApiKeyValidation();

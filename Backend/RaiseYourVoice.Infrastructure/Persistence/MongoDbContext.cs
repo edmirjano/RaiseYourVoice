@@ -1,19 +1,40 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
+using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Entities;
+using RaiseYourVoice.Infrastructure.Persistence.Conventions;
 
 namespace RaiseYourVoice.Infrastructure.Persistence
 {
     public class MongoDbContext
     {
         private readonly IMongoDatabase _database;
+        private readonly IEncryptionService _encryptionService;
 
-        public MongoDbContext(IOptions<MongoDbSettings> settings)
+        public MongoDbContext(IOptions<MongoDbSettings> settings, IEncryptionService encryptionService)
         {
+            _encryptionService = encryptionService;
+            
+            // Register encryption convention
+            RegisterConventions();
+            
             var client = new MongoClient(settings.Value.ConnectionString);
             _database = client.GetDatabase(settings.Value.DatabaseName);
+        }
+
+        private void RegisterConventions()
+        {
+            // Create a convention pack
+            var conventionPack = new ConventionPack
+            {
+                new EncryptedFieldsConvention(_encryptionService)
+            };
+
+            // Register the convention pack
+            ConventionRegistry.Register("EncryptedFieldsConvention", conventionPack, t => true);
         }
 
         public IMongoDatabase Database => _database;
@@ -26,6 +47,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence
         public IMongoCollection<Campaign> Campaigns => _database.GetCollection<Campaign>("Campaigns");
         public IMongoCollection<Donation> Donations => _database.GetCollection<Donation>("Donations");
         public IMongoCollection<RefreshToken> RefreshTokens => _database.GetCollection<RefreshToken>("RefreshTokens");
+        public IMongoCollection<EncryptionKey> EncryptionKeys => _database.GetCollection<EncryptionKey>("EncryptionKeys");
 
         /// <summary>
         /// Creates indexes for all collections to optimize query performance
@@ -233,6 +255,28 @@ namespace RaiseYourVoice.Infrastructure.Persistence
                 new CreateIndexModel<RefreshToken>(
                     Builders<RefreshToken>.IndexKeys.Ascending(r => r.ExpiresAt),
                     new CreateIndexOptions { Name = "Expiry_Index" }
+                )
+            );
+
+            // EncryptionKey indexes
+            await EncryptionKeys.Indexes.CreateOneAsync(
+                new CreateIndexModel<EncryptionKey>(
+                    Builders<EncryptionKey>.IndexKeys.Ascending(k => k.Purpose).Ascending(k => k.Version),
+                    new CreateIndexOptions { Name = "Purpose_Version_Index", Unique = true }
+                )
+            );
+            
+            await EncryptionKeys.Indexes.CreateOneAsync(
+                new CreateIndexModel<EncryptionKey>(
+                    Builders<EncryptionKey>.IndexKeys.Ascending(k => k.Purpose).Descending(k => k.IsActive),
+                    new CreateIndexOptions { Name = "Purpose_Active_Index" }
+                )
+            );
+            
+            await EncryptionKeys.Indexes.CreateOneAsync(
+                new CreateIndexModel<EncryptionKey>(
+                    Builders<EncryptionKey>.IndexKeys.Ascending(k => k.ExpiresAt),
+                    new CreateIndexOptions { Name = "ExpiresAt_Index" }
                 )
             );
         }

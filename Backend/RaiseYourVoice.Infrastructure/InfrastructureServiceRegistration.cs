@@ -5,6 +5,7 @@ using RaiseYourVoice.Domain.Common;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Infrastructure.Persistence;
 using RaiseYourVoice.Infrastructure.Persistence.Repositories;
+using RaiseYourVoice.Infrastructure.Security;
 using RaiseYourVoice.Infrastructure.Services;
 using RaiseYourVoice.Infrastructure.Services.Security;
 using MongoDB.Driver;
@@ -36,6 +37,7 @@ namespace RaiseYourVoice.Infrastructure
             services.AddScoped<IGenericRepository<Donation>, DonationRepository>();
             services.AddScoped<IGenericRepository<Notification>, NotificationRepository>();
             services.AddScoped<IGenericRepository<RefreshToken>, RefreshTokenRepository>();
+            services.AddScoped<IEncryptionKeyRepository, EncryptionKeyRepository>();
 
             // Register services
             services.AddScoped<IPushNotificationService, PushNotificationService>();
@@ -46,6 +48,8 @@ namespace RaiseYourVoice.Infrastructure
             // Register security services
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IPasswordHasher, PasswordHasher>();
+            services.AddScoped<EncryptionLoggingService>();
+            services.AddScoped<IEncryptionService, EncryptionService>();
 
             // Configure payment gateway
             services.Configure<StripeSettings>(configuration.GetSection("Stripe"));
@@ -57,6 +61,10 @@ namespace RaiseYourVoice.Infrastructure
                 options.Configuration = configuration.GetConnectionString("RedisConnection");
                 options.InstanceName = "RYV_";
             });
+            
+            // Configure key rotation
+            services.Configure<KeyRotationOptions>(configuration.GetSection("KeyRotationSettings"));
+            services.AddHostedService<KeyRotationBackgroundService>();
 
             return services;
         }
