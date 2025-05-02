@@ -130,7 +130,7 @@ namespace RaiseYourVoice.Infrastructure.Services.Security
             {
                 UserId = userId,
                 Token = refreshToken,
-                ExpiryDate = expiry,
+                ExpireAt = expiry,
                 CreatedAt = DateTime.UtcNow
             };
             

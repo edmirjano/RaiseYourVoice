@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RaiseYourVoice.Application.Interfaces;
+using RaiseYourVoice.Application.Models.Pagination;
 using RaiseYourVoice.Application.Models.Requests;
 using RaiseYourVoice.Domain.Entities;
+using RaiseYourVoice.Domain.Enums;
+using RaiseYourVoice.Infrastructure.Persistence.Repositories;
 
 namespace RaiseYourVoice.Api.Controllers
 {
@@ -11,32 +14,78 @@ namespace RaiseYourVoice.Api.Controllers
     public class CampaignsController : ControllerBase
     {
         private readonly ICampaignService _campaignService;
+        private readonly CampaignRepository _campaignRepository; // Direct repository access for advanced features
 
-        public CampaignsController(ICampaignService campaignService)
+        public CampaignsController(ICampaignService campaignService, CampaignRepository campaignRepository)
         {
             _campaignService = campaignService;
+            _campaignRepository = campaignRepository;
         }
 
+        /// <summary>
+        /// Get all campaigns with pagination and filtering
+        /// </summary>
+        /// <param name="parameters">Filter and pagination parameters</param>
         [HttpGet]
-        public async Task<IActionResult> GetAllCampaigns()
+        public async Task<IActionResult> GetAllCampaigns([FromQuery] CampaignFilterParameters parameters)
         {
-            var campaigns = await _campaignService.GetAllCampaignsAsync();
+            var campaigns = await _campaignRepository.GetCampaignsAsync(parameters);
+            return Ok(campaigns);
+        }
+        
+        /// <summary>
+        /// Get paginated campaigns near a geographic location
+        /// </summary>
+        /// <param name="latitude">Latitude</param>
+        /// <param name="longitude">Longitude</param>
+        /// <param name="maxDistanceKm">Maximum distance in kilometers</param>
+        /// <param name="pageNumber">Page number</param>
+        /// <param name="pageSize">Page size</param>
+        [HttpGet("nearby")]
+        public async Task<IActionResult> GetNearbyCampaigns(
+            [FromQuery] double latitude, 
+            [FromQuery] double longitude,
+            [FromQuery] double maxDistanceKm = 50,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var campaigns = await _campaignRepository.GetNearbyAsync(
+                latitude, 
+                longitude, 
+                maxDistanceKm,
+                pageNumber,
+                pageSize);
+                
             return Ok(campaigns);
         }
 
         [HttpGet("featured")]
-        public async Task<IActionResult> GetFeaturedCampaigns()
+        public async Task<IActionResult> GetFeaturedCampaigns([FromQuery] int limit = 5)
         {
-            var campaigns = await _campaignService.GetFeaturedCampaignsAsync();
+            var campaigns = await _campaignService.GetFeaturedCampaignsAsync(limit);
             return Ok(campaigns);
         }
 
         [HttpGet("category/{category}")]
-        public async Task<IActionResult> GetCampaignsByCategory(string category)
+        public async Task<IActionResult> GetCampaignsByCategory(string category, [FromQuery] PaginationParameters parameters)
         {
             try
             {
-                var campaigns = await _campaignService.GetCampaignsByCategoryAsync(category);
+                if (!Enum.TryParse<CampaignCategory>(category, true, out var campaignCategory))
+                {
+                    return BadRequest($"Invalid category: {category}");
+                }
+                
+                var filterParameters = new CampaignFilterParameters
+                {
+                    Category = campaignCategory,
+                    PageNumber = parameters.PageNumber,
+                    PageSize = parameters.PageSize,
+                    SortBy = parameters.SortBy,
+                    Ascending = parameters.Ascending
+                };
+                
+                var campaigns = await _campaignRepository.GetCampaignsAsync(filterParameters);
                 return Ok(campaigns);
             }
             catch (ArgumentException ex)
@@ -53,6 +102,9 @@ namespace RaiseYourVoice.Api.Controllers
             {
                 return NotFound();
             }
+
+            // Increment view count asynchronously
+            _ = _campaignRepository.IncrementViewCountAsync(id);
 
             return Ok(campaign);
         }
@@ -220,15 +272,19 @@ namespace RaiseYourVoice.Api.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Search campaigns with full-text search and filtering
+        /// </summary>
+        /// <param name="parameters">Campaign filter parameters containing search text and other filters</param>
         [HttpGet("search")]
-        public async Task<IActionResult> SearchCampaigns([FromQuery] string query)
+        public async Task<IActionResult> SearchCampaigns([FromQuery] CampaignFilterParameters parameters)
         {
-            if (string.IsNullOrEmpty(query))
+            if (string.IsNullOrEmpty(parameters.SearchText))
             {
                 return BadRequest("Search query is required");
             }
 
-            var campaigns = await _campaignService.SearchCampaignsAsync(query);
+            var campaigns = await _campaignRepository.GetCampaignsAsync(parameters);
             return Ok(campaigns);
         }
 
@@ -244,6 +300,16 @@ namespace RaiseYourVoice.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+        
+        /// <summary>
+        /// Get global campaign statistics
+        /// </summary>
+        [HttpGet("statistics")]
+        public async Task<IActionResult> GetGlobalStatistics()
+        {
+            var statistics = await _campaignRepository.GetCampaignStatisticsAsync();
+            return Ok(statistics);
         }
     }
 }

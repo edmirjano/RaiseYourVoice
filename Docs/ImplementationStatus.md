@@ -96,8 +96,13 @@ This document tracks the implementation status of the RaiseYourVoice activism pl
 | Opportunities          | ⚠️ In Progress | Event listings and filtering              |
 | Success Stories        | ⚠️ In Progress | Activist profiles and spotlights          |
 | Admin Dashboard        | ❌ Not Started | Content and user management               |
-| Multilingual Support   | ⚠️ In Progress | English and Albanian implemented          |
-| Media Optimization     | ⚠️ In Progress | Ensure all images use WebP and videos use WebM formats for performance. |
+| Multilingual Support   | ✅ Implemented | English and Albanian implemented          |
+| Media Optimization     | ⚠️ In Progress | WebP and WebM format support              |
+| Project Setup          | ✅ Implemented | Next.js with TypeScript and Tailwind CSS   |
+| Base Layout Components | ✅ Implemented | iOS-inspired layout structure with responsive design |
+| Page Transitions       | ✅ Implemented | Smooth animations with framer-motion      |
+| SSR Configuration      | ✅ Implemented | Server-side rendering enabled             |
+| CI/CD Pipeline         | ✅ Implemented | GitHub Actions with Kubernetes deployment |
 
 ### iOS App
 | Component              | Status         | Notes                                      |

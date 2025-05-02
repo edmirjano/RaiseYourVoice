@@ -9,5 +9,9 @@ namespace RaiseYourVoice.Domain.Entities
         public required string Content { get; set; }
         public int LikeCount { get; set; }
         public string? ParentCommentId { get; set; }
+
+        public bool IsReported { get; set; } = false;
+        public string? ReportedBy { get; set; }
+        public DateTime? ReportResolvedAt { get; set; }
     }
 }

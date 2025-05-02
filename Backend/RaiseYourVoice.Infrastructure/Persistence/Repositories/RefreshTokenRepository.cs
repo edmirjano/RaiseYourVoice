@@ -7,73 +7,98 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {
     public class RefreshTokenRepository : MongoRepository<RefreshToken>, IRefreshTokenRepository
     {
-        // Use 'new' keyword to explicitly hide the base class _collection
-        protected new readonly IMongoCollection<RefreshToken> _collection;
-
-        public RefreshTokenRepository(
-            MongoDbContext context, 
-            ILogger<RefreshTokenRepository> logger) 
+        public RefreshTokenRepository(MongoDbContext context, ILogger<RefreshTokenRepository> logger) 
             : base(context, "RefreshTokens", logger)
         {
-            _collection = context.Database.GetCollection<RefreshToken>("RefreshTokens");
         }
 
-        public async Task<RefreshToken> GetByTokenAsync(string token)
+        public async Task<RefreshToken?> FindValidTokenAsync(string userId, string token)
         {
-            return await _collection.Find(rt => rt.Token == token).FirstOrDefaultAsync();
+            var currentTime = DateTime.UtcNow;
+            var filter = Builders<RefreshToken>.Filter.And(
+                Builders<RefreshToken>.Filter.Eq(rt => rt.UserId, userId),
+                Builders<RefreshToken>.Filter.Eq(rt => rt.Token, token),
+                Builders<RefreshToken>.Filter.Gt(rt => rt.ExpiresAt, currentTime),
+                Builders<RefreshToken>.Filter.Eq(rt => rt.IsRevoked, false)
+            );
+
+            return await _collection.Find(filter).FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<RefreshToken>> GetByUserIdAsync(string userId)
+        public async Task<bool> MarkTokenAsRevokedAsync(string userId, string token)
         {
-            return await _collection.Find(rt => rt.UserId == userId).ToListAsync();
-        }
+            var filter = Builders<RefreshToken>.Filter.And(
+                Builders<RefreshToken>.Filter.Eq(rt => rt.UserId, userId),
+                Builders<RefreshToken>.Filter.Eq(rt => rt.Token, token)
+            );
 
-        public async Task<RefreshToken?> FindValidTokenAsync(string token, string userId)
-        {
-            var now = DateTime.UtcNow;
-            return await _collection.Find(rt => 
-                rt.Token == token && 
-                rt.UserId == userId && 
-                rt.ExpiryDate > now && 
-                !rt.IsRevoked)
-                .FirstOrDefaultAsync();
+            var update = Builders<RefreshToken>.Update
+                .Set(rt => rt.IsRevoked, true)
+                .Set(rt => rt.RevokedAt, DateTime.UtcNow)
+                .Set(rt => rt.UpdatedAt, DateTime.UtcNow);
+
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
         }
 
         public async Task<bool> RevokeAllUserTokensAsync(string userId)
         {
-            var update = Builders<RefreshToken>.Update
-                .Set(rt => rt.IsRevoked, true)
-                .Set(rt => rt.RevokedAt, DateTime.UtcNow);
-                
-            var result = await _collection.UpdateManyAsync(rt => rt.UserId == userId, update);
-            return result.IsAcknowledged && result.ModifiedCount > 0;
-        }
+            var filter = Builders<RefreshToken>.Filter.And(
+                Builders<RefreshToken>.Filter.Eq(rt => rt.UserId, userId),
+                Builders<RefreshToken>.Filter.Eq(rt => rt.IsRevoked, false)
+            );
 
-        public async Task<bool> RevokeTokenAsync(string token)
-        {
-            var update = Builders<RefreshToken>.Update
-                .Set(rt => rt.IsRevoked, true)
-                .Set(rt => rt.RevokedAt, DateTime.UtcNow);
-                
-            var result = await _collection.UpdateOneAsync(rt => rt.Token == token, update);
-            return result.IsAcknowledged && result.ModifiedCount > 0;
-        }
-
-        public async Task MarkTokenAsRevokedAsync(string token, string reason)
-        {
             var update = Builders<RefreshToken>.Update
                 .Set(rt => rt.IsRevoked, true)
                 .Set(rt => rt.RevokedAt, DateTime.UtcNow)
-                .Set(rt => rt.ReasonRevoked, reason);
-                
-            await _collection.UpdateOneAsync(rt => rt.Token == token, update);
+                .Set(rt => rt.UpdatedAt, DateTime.UtcNow);
+
+            var result = await _collection.UpdateManyAsync(filter, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
         }
 
-        public async Task<bool> DeleteExpiredTokensAsync()
+        public async Task<IEnumerable<RefreshToken>> GetByUserIdAsync(string userId)
         {
-            var now = DateTime.UtcNow;
-            var result = await _collection.DeleteManyAsync(rt => rt.ExpiryDate < now);
+            var filter = Builders<RefreshToken>.Filter.Eq(rt => rt.UserId, userId);
+            return await _collection.Find(filter).ToListAsync();
+        }
+
+        public async Task<bool> CleanupExpiredTokensAsync()
+        {
+            var currentTime = DateTime.UtcNow;
+            var filter = Builders<RefreshToken>.Filter.Lt(rt => rt.ExpiresAt, currentTime);
+            
+            var result = await _collection.DeleteManyAsync(filter);
             return result.IsAcknowledged && result.DeletedCount > 0;
+        }
+
+        public async Task<RefreshToken?> FindTokenByValueAsync(string token)
+        {
+            var filter = Builders<RefreshToken>.Filter.Eq(rt => rt.Token, token);
+            return await _collection.Find(filter).FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> UpdateTokenExpirationAsync(string tokenId, DateTime newExpiration)
+        {
+            var filter = Builders<RefreshToken>.Filter.Eq(rt => rt.Id, tokenId);
+            var update = Builders<RefreshToken>.Update
+                .Set(rt => rt.ExpiresAt, newExpiration)
+                .Set(rt => rt.UpdatedAt, DateTime.UtcNow);
+            
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
+
+        public async Task<long> CountValidTokensForUserAsync(string userId)
+        {
+            var currentTime = DateTime.UtcNow;
+            var filter = Builders<RefreshToken>.Filter.And(
+                Builders<RefreshToken>.Filter.Eq(rt => rt.UserId, userId),
+                Builders<RefreshToken>.Filter.Gt(rt => rt.ExpiresAt, currentTime),
+                Builders<RefreshToken>.Filter.Eq(rt => rt.IsRevoked, false)
+            );
+            
+            return await _collection.CountDocumentsAsync(filter);
         }
     }
 }

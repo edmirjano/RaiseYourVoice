@@ -1,154 +1,232 @@
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Domain.Enums;
 
 namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {
-    public class NotificationRepository : MongoGenericRepository<Notification>
+    public class NotificationRepository : MongoRepository<Notification>
     {
-        public NotificationRepository(MongoDbContext context) : base(context, "Notifications")
+        public NotificationRepository(MongoDbContext context, ILogger<NotificationRepository> logger) 
+            : base(context, "Notifications", logger)
         {
         }
 
-        public async Task<IEnumerable<Notification>> GetByUserIdAsync(string userId, int limit = 20, int skip = 0)
+        public async Task<IEnumerable<Notification>> GetByUserIdAsync(string userId)
         {
-            // Target users with this user ID in their target audience
-            var filter = Builders<Notification>.Filter.Where(n => 
-                (n.TargetAudience.Type == TargetType.AllUsers) ||
-                (n.TargetAudience.Type == TargetType.SpecificUsers && 
-                 n.TargetAudience.UserIds != null && 
-                 n.TargetAudience.UserIds.Contains(userId)));
-            
+            var filter = Builders<Notification>.Filter.AnyEq("TargetAudience.UserIds", userId);
             return await _collection.Find(filter)
-                .Skip(skip)
-                .Limit(limit)
-                .SortByDescending(n => n.SentAt)
+                .Sort(Builders<Notification>.Sort.Descending(n => n.CreatedAt))
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Notification>> GetUnreadByUserIdAsync(string userId, int limit = 20)
+        public async Task<IEnumerable<Notification>> GetUnreadByUserIdAsync(string userId)
         {
-            // Find notifications targeted at this user that are not marked as read
             var filter = Builders<Notification>.Filter.And(
-                Builders<Notification>.Filter.Where(n => 
-                    (n.TargetAudience.Type == TargetType.AllUsers) ||
-                    (n.TargetAudience.Type == TargetType.SpecificUsers && 
-                     n.TargetAudience.UserIds != null && 
-                     n.TargetAudience.UserIds.Contains(userId))),
-                Builders<Notification>.Filter.Ne(n => n.ReadStatus, ReadStatus.Read)
+                Builders<Notification>.Filter.AnyEq("TargetAudience.UserIds", userId),
+                Builders<Notification>.Filter.Not(
+                    Builders<Notification>.Filter.AnyEq("ReadByUserIds", userId)
+                )
             );
-            
+
             return await _collection.Find(filter)
-                .Limit(limit)
-                .SortByDescending(n => n.SentAt)
+                .Sort(Builders<Notification>.Sort.Descending(n => n.CreatedAt))
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Notification>> GetByTypeAsync(NotificationType type, int limit = 20, int skip = 0)
+        public async Task<IEnumerable<Notification>> GetByRoleAsync(UserRole role)
         {
-            var filter = Builders<Notification>.Filter.Eq(n => n.Type, type);
-            
+            var filter = Builders<Notification>.Filter.AnyEq("TargetAudience.Roles", role);
             return await _collection.Find(filter)
-                .Skip(skip)
-                .Limit(limit)
-                .SortByDescending(n => n.SentAt)
+                .Sort(Builders<Notification>.Sort.Descending(n => n.CreatedAt))
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Notification>> GetActiveNotificationsAsync()
+        {
+            var currentTime = DateTime.UtcNow;
+            var filter = Builders<Notification>.Filter.Or(
+                Builders<Notification>.Filter.Gt(n => n.ExpiresAt, currentTime),
+                Builders<Notification>.Filter.Eq(n => n.ExpiresAt, null)
+            );
+
+            return await _collection.Find(filter)
+                .Sort(Builders<Notification>.Sort.Descending(n => n.CreatedAt))
                 .ToListAsync();
         }
 
         public async Task<bool> MarkAsReadAsync(string notificationId, string userId)
         {
             var filter = Builders<Notification>.Filter.Eq(n => n.Id, notificationId);
-            var update = Builders<Notification>.Update
-                .Set(n => n.ReadStatus, ReadStatus.Read)
-                .Set(n => n.UpdatedAt, DateTime.UtcNow);
-            
+            var update = Builders<Notification>.Update.AddToSet("ReadByUserIds", userId);
+
             var result = await _collection.UpdateOneAsync(filter, update);
             return result.IsAcknowledged && result.ModifiedCount > 0;
         }
 
         public async Task<bool> MarkAllAsReadAsync(string userId)
         {
-            // Find all notifications targeting this user
-            var filter = Builders<Notification>.Filter.Where(n => 
-                (n.TargetAudience.Type == TargetType.AllUsers) ||
-                (n.TargetAudience.Type == TargetType.SpecificUsers && 
-                 n.TargetAudience.UserIds != null && 
-                 n.TargetAudience.UserIds.Contains(userId)));
-            
-            var update = Builders<Notification>.Update
-                .Set(n => n.ReadStatus, ReadStatus.Read)
-                .Set(n => n.UpdatedAt, DateTime.UtcNow);
-            
+            var filter = Builders<Notification>.Filter.And(
+                Builders<Notification>.Filter.AnyEq("TargetAudience.UserIds", userId),
+                Builders<Notification>.Filter.Not(
+                    Builders<Notification>.Filter.AnyEq("ReadByUserIds", userId)
+                )
+            );
+
+            var update = Builders<Notification>.Update.AddToSet("ReadByUserIds", userId);
             var result = await _collection.UpdateManyAsync(filter, update);
+            
             return result.IsAcknowledged && result.ModifiedCount > 0;
         }
 
-        public async Task<int> GetUnreadCountAsync(string userId)
+        public async Task<IEnumerable<Notification>> GetPaginatedNotificationsAsync(
+            string userId,
+            int pageNumber,
+            int pageSize,
+            bool unreadOnly = false,
+            NotificationType? type = null)
         {
-            // Find unread notifications for this user
-            var filter = Builders<Notification>.Filter.And(
-                Builders<Notification>.Filter.Where(n => 
-                    (n.TargetAudience.Type == TargetType.AllUsers) ||
-                    (n.TargetAudience.Type == TargetType.SpecificUsers && 
-                     n.TargetAudience.UserIds != null && 
-                     n.TargetAudience.UserIds.Contains(userId))),
-                Builders<Notification>.Filter.Ne(n => n.ReadStatus, ReadStatus.Read)
-            );
-            
-            return (int)await _collection.CountDocumentsAsync(filter);
+            var filterBuilder = Builders<Notification>.Filter;
+            var filters = new List<FilterDefinition<Notification>>();
+
+            // Base filter: notifications targeted to this user
+            filters.Add(filterBuilder.AnyEq("TargetAudience.UserIds", userId));
+
+            // Add filter for unread notifications
+            if (unreadOnly)
+            {
+                filters.Add(filterBuilder.Not(
+                    filterBuilder.AnyEq("ReadByUserIds", userId)
+                ));
+            }
+
+            // Add filter for notification type
+            if (type.HasValue)
+            {
+                filters.Add(filterBuilder.Eq(n => n.Type, type.Value));
+            }
+
+            var combinedFilter = filterBuilder.And(filters);
+
+            return await _collection
+                .Find(combinedFilter)
+                .Sort(Builders<Notification>.Sort.Descending(n => n.CreatedAt))
+                .Skip((pageNumber - 1) * pageSize)
+                .Limit(pageSize)
+                .ToListAsync();
         }
 
-        public async Task<IEnumerable<Notification>> GetExpiredNotificationsAsync()
+        public async Task<long> CountNotificationsAsync(
+            string userId,
+            bool unreadOnly = false,
+            NotificationType? type = null)
         {
-            var now = DateTime.UtcNow;
-            var filter = Builders<Notification>.Filter.And(
-                Builders<Notification>.Filter.Ne(n => n.ExpiresAt, null),
-                Builders<Notification>.Filter.Lt(n => n.ExpiresAt, now)
-            );
-            
-            return await _collection.Find(filter).ToListAsync();
+            var filterBuilder = Builders<Notification>.Filter;
+            var filters = new List<FilterDefinition<Notification>>();
+
+            // Base filter: notifications targeted to this user
+            filters.Add(filterBuilder.AnyEq("TargetAudience.UserIds", userId));
+
+            // Add filter for unread notifications
+            if (unreadOnly)
+            {
+                filters.Add(filterBuilder.Not(
+                    filterBuilder.AnyEq("ReadByUserIds", userId)
+                ));
+            }
+
+            // Add filter for notification type
+            if (type.HasValue)
+            {
+                filters.Add(filterBuilder.Eq(n => n.Type, type.Value));
+            }
+
+            var combinedFilter = filterBuilder.And(filters);
+            return await _collection.CountDocumentsAsync(combinedFilter);
         }
 
         public async Task<bool> DeleteExpiredNotificationsAsync()
         {
-            var now = DateTime.UtcNow;
-            var filter = Builders<Notification>.Filter.And(
-                Builders<Notification>.Filter.Ne(n => n.ExpiresAt, null),
-                Builders<Notification>.Filter.Lt(n => n.ExpiresAt, now)
-            );
-            
+            var currentTime = DateTime.UtcNow;
+            var filter = Builders<Notification>.Filter.Lt(n => n.ExpiresAt, currentTime);
+
             var result = await _collection.DeleteManyAsync(filter);
             return result.IsAcknowledged && result.DeletedCount > 0;
         }
 
-        public async Task<bool> AddRecipientAsync(string notificationId, string userId)
+        public async Task<bool> AddDeliveryStatusAsync(string notificationId, string userId, DeliveryStatus status, string? deviceId = null)
         {
             var filter = Builders<Notification>.Filter.Eq(n => n.Id, notificationId);
             
-            // Check if the notification has SpecificUsers target type
-            var notification = await _collection.Find(filter).FirstOrDefaultAsync();
-            if (notification == null || notification.TargetAudience.Type != TargetType.SpecificUsers)
+            // Create delivery status
+            var deliveryStatus = new NotificationDeliveryStatus
             {
-                return false;
-            }
+                UserId = userId,
+                Status = status,
+                Timestamp = DateTime.UtcNow,
+                DeviceId = deviceId
+            };
+
+            var update = Builders<Notification>.Update.Push(n => n.DeliveryStatuses, deliveryStatus);
+            var result = await _collection.UpdateOneAsync(filter, update);
             
-            // Initialize UserIds array if null
-            var userIds = notification.TargetAudience.UserIds?.ToList() ?? new List<string>();
-            
-            // Add the user if not already in the list
-            if (!userIds.Contains(userId))
+            return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
+
+        public async Task<Dictionary<string, int>> GetNotificationStatisticsAsync(DateTime? startDate = null, DateTime? endDate = null)
+        {
+            var filterBuilder = Builders<Notification>.Filter;
+            var filters = new List<FilterDefinition<Notification>>();
+
+            if (startDate.HasValue)
             {
-                userIds.Add(userId);
-                
-                var update = Builders<Notification>.Update
-                    .Set(n => n.TargetAudience.UserIds, userIds.ToArray())
-                    .Set(n => n.UpdatedAt, DateTime.UtcNow);
-                
-                var result = await _collection.UpdateOneAsync(filter, update);
-                return result.IsAcknowledged && result.ModifiedCount > 0;
+                filters.Add(filterBuilder.Gte(n => n.CreatedAt, startDate.Value));
             }
-            
-            return true; // User was already a recipient
+
+            if (endDate.HasValue)
+            {
+                filters.Add(filterBuilder.Lte(n => n.CreatedAt, endDate.Value));
+            }
+
+            var combinedFilter = filters.Count > 0
+                ? filterBuilder.And(filters)
+                : filterBuilder.Empty;
+
+            // Get basic counts
+            var totalCount = await _collection.CountDocumentsAsync(combinedFilter);
+
+            // Type breakdown using aggregation
+            var typePipeline = new[]
+            {
+                new BsonDocument("$match", combinedFilter.Render(
+                    _collection.DocumentSerializer, 
+                    _collection.Settings.SerializerRegistry)),
+                new BsonDocument("$group", new BsonDocument
+                {
+                    { "_id", "$Type" },
+                    { "count", new BsonDocument("$sum", 1) }
+                })
+            };
+
+            var typeResults = await _collection.Aggregate<BsonDocument>(typePipeline).ToListAsync();
+            var typeStats = typeResults.ToDictionary(
+                r => r["_id"].AsString,
+                r => r["count"].AsInt32
+            );
+
+            // Combine all stats
+            var statistics = new Dictionary<string, int>
+            {
+                { "totalCount", (int)totalCount }
+            };
+
+            // Add type counts
+            foreach (var typeStat in typeStats)
+            {
+                statistics[$"type_{typeStat.Key}"] = typeStat.Value;
+            }
+
+            return statistics;
         }
     }
 }

@@ -30,19 +30,101 @@ body {
 
 /* Animations */
 .ios-fade-in {
-  animation: ios-fade-in 0.3s ease-in forwards;
+  @apply opacity-0 animate-[fade-in_0.3s_ease-out_forwards];
 }
 
-@keyframes ios-fade-in {
+.ios-fade-out {
+  @apply animate-[fade-out_0.2s_ease-in_forwards];
+}
+
+.ios-slide-up {
+  @apply translate-y-4 opacity-0 animate-[slide-up_0.3s_ease-out_forwards];
+}
+
+.ios-slide-down {
+  @apply animate-[slide-down_0.2s_ease-in_forwards];
+}
+
+.ios-scale-in {
+  @apply scale-95 opacity-0 animate-[scale-in_0.2s_ease-out_forwards];
+}
+
+.ios-scale-out {
+  @apply animate-[scale-out_0.15s_ease-in_forwards];
+}
+
+.ios-button-secondary {
+  @apply rounded-full px-6 py-2.5 font-semibold transition-all duration-200 text-ios-black bg-white border border-gray-200 hover:bg-gray-50 active:bg-gray-100;
+}
+
+/* Animation keyframes */
+@keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-.ios-slide-up {
-  animation: ios-slide-up 0.4s ease-out forwards;
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
-@keyframes ios-slide-up {
-  from { transform: translateY(20px); opacity: 0; }
+@keyframes slide-up {
+  from { transform: translateY(16px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(16px); opacity: 0; }
+}
+
+@keyframes scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes scale-out {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.95); opacity: 0; }
+}
+
+/* Page transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-rgb: 18, 18, 18;
+  }
 }

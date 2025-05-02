@@ -4,6 +4,7 @@ using RaiseYourVoice.Application.Interfaces;
 using RaiseYourVoice.Domain.Entities;
 using RaiseYourVoice.Infrastructure.Persistence;
 using RaiseYourVoice.Infrastructure.Persistence.Repositories;
+using RaiseYourVoice.Infrastructure.Persistence.Seeding;
 using RaiseYourVoice.Infrastructure.Security;
 using RaiseYourVoice.Infrastructure.Services;
 using RaiseYourVoice.Infrastructure.Services.Security;
@@ -37,16 +38,27 @@ namespace RaiseYourVoice.Infrastructure
             services.AddScoped(typeof(IGenericRepository<>), typeof(MongoRepository<>));
             
             // Register specific repositories
-            services.AddScoped<IGenericRepository<User>, UserRepository>();
-            services.AddScoped<IGenericRepository<Post>, PostRepository>();
-            services.AddScoped<IGenericRepository<Comment>, CommentRepository>();
-            services.AddScoped<IGenericRepository<Organization>, OrganizationRepository>();
-            services.AddScoped<IGenericRepository<Campaign>, CampaignRepository>();
-            services.AddScoped<IGenericRepository<Donation>, DonationRepository>();
-            services.AddScoped<IGenericRepository<Notification>, NotificationRepository>();
-            services.AddScoped<IGenericRepository<RefreshToken>, RefreshTokenRepository>();
-            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-            services.AddScoped<IEncryptionKeyRepository, EncryptionKeyRepository>();
+            services.AddScoped<UserRepository>();
+            services.AddScoped<PostRepository>();
+            services.AddScoped<CommentRepository>();
+            services.AddScoped<OrganizationRepository>();
+            services.AddScoped<CampaignRepository>();
+            services.AddScoped<DonationRepository>();
+            services.AddScoped<NotificationRepository>();
+            services.AddScoped<RefreshTokenRepository>();
+            services.AddScoped<EncryptionKeyRepository>();
+            
+            // Register repositories as their interfaces
+            services.AddScoped<IGenericRepository<User>>(provider => provider.GetRequiredService<UserRepository>());
+            services.AddScoped<IGenericRepository<Post>>(provider => provider.GetRequiredService<PostRepository>());
+            services.AddScoped<IGenericRepository<Comment>>(provider => provider.GetRequiredService<CommentRepository>());
+            services.AddScoped<IGenericRepository<Organization>>(provider => provider.GetRequiredService<OrganizationRepository>());
+            services.AddScoped<IGenericRepository<Campaign>>(provider => provider.GetRequiredService<CampaignRepository>());
+            services.AddScoped<IGenericRepository<Donation>>(provider => provider.GetRequiredService<DonationRepository>());
+            services.AddScoped<IGenericRepository<Notification>>(provider => provider.GetRequiredService<NotificationRepository>());
+            services.AddScoped<IGenericRepository<RefreshToken>>(provider => provider.GetRequiredService<RefreshTokenRepository>());
+            services.AddScoped<IRefreshTokenRepository>(provider => provider.GetRequiredService<RefreshTokenRepository>());
+            services.AddScoped<IEncryptionKeyRepository>(provider => provider.GetRequiredService<EncryptionKeyRepository>());
 
             // Register services
             services.AddScoped<IPushNotificationService, PushNotificationService>();
@@ -60,6 +72,15 @@ namespace RaiseYourVoice.Infrastructure
             services.AddScoped<EncryptionLoggingService>();
             services.AddScoped<IEncryptionService, EncryptionService>();
             services.AddSingleton<JwtKeyManager>();
+            
+            // Register data seeders
+            services.AddScoped<UserSeeder>();
+            services.AddScoped<OrganizationSeeder>();
+            services.AddScoped<CampaignSeeder>();
+            services.AddScoped<PostSeeder>();
+            services.AddScoped<DonationSeeder>();
+            services.AddScoped<CommentSeeder>();
+            services.AddScoped<DataSeederCoordinator>();
 
             // Configure payment gateway
             services.Configure<StripeSettings>(options =>
@@ -90,6 +111,14 @@ namespace RaiseYourVoice.Infrastructure
 
             services.AddHostedService<KeyRotationBackgroundService>();
 
+            return services;
+        }
+        
+        /// <summary>
+        /// Adds extension method to make it easy to register data seeding in Program.cs
+        /// </summary>
+        public static IServiceCollection AddDataSeeding(this IServiceCollection services)
+        {
             return services;
         }
     }

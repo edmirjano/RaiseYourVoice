@@ -208,7 +208,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence
             // Notification indexes
             await Notifications.Indexes.CreateOneAsync(
                 new CreateIndexModel<Notification>(
-                    Builders<Notification>.IndexKeys.Ascending("RecipientIds"),
+                    Builders<Notification>.IndexKeys.Ascending("TargetAudience.UserIds"),
                     new CreateIndexOptions { Name = "Recipients_Index" }
                 )
             );
@@ -251,7 +251,7 @@ namespace RaiseYourVoice.Infrastructure.Persistence
             
             await RefreshTokens.Indexes.CreateOneAsync(
                 new CreateIndexModel<RefreshToken>(
-                    Builders<RefreshToken>.IndexKeys.Ascending(r => r.ExpiryDate),
+                    Builders<RefreshToken>.IndexKeys.Ascending(r => r.ExpiresAt),
                     new CreateIndexOptions { Name = "Expiry_Index" }
                 )
             );

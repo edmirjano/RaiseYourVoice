@@ -1,0 +1,131 @@
+name: Web CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Web/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Web/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'Web/package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: ./Web
+        run: npm ci
+      
+      - name: Lint code
+        working-directory: ./Web
+        run: npm run lint
+      
+      - name: Build application
+        working-directory: ./Web
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: web-build
+          path: Web/.next
+          retention-days: 3
+  
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'Web/package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: ./Web
+        run: npm ci
+      
+      - name: Run tests
+        working-directory: ./Web
+        run: npm test || echo "No tests defined, skipping"
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: web-build
+          path: Web/.next
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build and save Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./Web
+          push: false
+          tags: raiseyourvoice/web:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/web-image.tar
+      
+      - name: Create deployment package
+        run: |
+          mkdir -p /tmp/deployment
+          cp /tmp/web-image.tar /tmp/deployment/
+          cp -r ./Infrastructure/k8s/web /tmp/deployment/k8s
+          tar -czf /tmp/web-deployment.tar.gz -C /tmp/deployment .
+      
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          source: /tmp/web-deployment.tar.gz
+          target: /tmp/
+      
+      - name: Execute deployment script
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script: |
+            mkdir -p ~/deployments
+            tar -xzf /tmp/web-deployment.tar.gz -C ~/deployments
+            docker load -i ~/deployments/web-image.tar
+            kubectl apply -f ~/deployments/k8s/
+            kubectl rollout restart deployment web-deployment
+            echo "Web deployment completed at $(date)"

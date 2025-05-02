@@ -89,3 +89,56 @@ export const getCurrentUser = () => {
     return null;
   }
 };
+
+/**
+ * Send a password reset email to the specified email address
+ */
+export const forgotPassword = async (email: string): Promise<void> => {
+  await apiClient.post('/auth/forgot-password', { email });
+};
+
+/**
+ * Reset password using token from email
+ */
+export const resetPassword = async (token: string, newPassword: string): Promise<void> => {
+  await apiClient.post('/auth/reset-password', { token, newPassword });
+};
+
+/**
+ * Handle OAuth callback from Google/Apple login
+ */
+export const handleOAuthCallback = async (token: string): Promise<AuthResponse> => {
+  const response = await apiClient.post<AuthResponse>('/auth/oauth-callback', { token });
+  
+  if (response.data.token) {
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('refreshToken', response.data.refreshToken);
+    localStorage.setItem('user', JSON.stringify({
+      id: response.data.userId,
+      name: response.data.name,
+      email: response.data.email,
+      role: response.data.role
+    }));
+  }
+  
+  return response.data;
+};
+
+/**
+ * Verify email address with verification token
+ */
+export const verifyEmail = async (token: string): Promise<void> => {
+  await apiClient.post('/auth/verify-email', { token });
+};
+
+/**
+ * Check if current token is valid
+ */
+export const validateToken = async (): Promise<boolean> => {
+  try {
+    await apiClient.get('/auth/validate-token');
+    return true;
+  } catch (error) {
+    return false;
+  }
+};

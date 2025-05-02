@@ -7,6 +7,7 @@ using RaiseYourVoice.Api.Middleware;
 using RaiseYourVoice.Infrastructure.Services.Security;
 using RaiseYourVoice.Infrastructure.Persistence;
 using RaiseYourVoice.Infrastructure.Security;
+using RaiseYourVoice.Infrastructure.Persistence.Seeding;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.RateLimiting; // Added missing namespace for rate limiting
 
@@ -219,6 +220,25 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
     await dbContext.EnsureIndexesAsync();
     app.Logger.LogInformation("MongoDB indexes created successfully");
+    
+    // Seed initial data if in development environment or if SEED_DATA environment variable is set
+    bool seedData = app.Environment.IsDevelopment() || 
+                    !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SEED_DATA"));
+                    
+    if (seedData)
+    {
+        try
+        {
+            app.Logger.LogInformation("Seeding initial data...");
+            var dataSeeder = scope.ServiceProvider.GetRequiredService<DataSeederCoordinator>();
+            await dataSeeder.SeedAllAsync();
+            app.Logger.LogInformation("Data seeding completed successfully");
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "An error occurred while seeding the database");
+        }
+    }
 }
 
 app.Run();

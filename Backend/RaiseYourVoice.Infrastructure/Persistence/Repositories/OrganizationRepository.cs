@@ -7,35 +7,27 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
 {
     public class OrganizationRepository : MongoRepository<Organization>
     {
-        protected readonly ILogger<OrganizationRepository> _logger;
-
-        public OrganizationRepository(MongoDbContext context, ILogger<OrganizationRepository> logger) : base(context, "Organizations",logger)
+        public OrganizationRepository(MongoDbContext context, ILogger<OrganizationRepository> logger) 
+            : base(context, "Organizations", logger)
         {
-            _logger = logger;
         }
 
         public async Task<IEnumerable<Organization>> GetByVerificationStatusAsync(VerificationStatus status)
         {
             var filter = Builders<Organization>.Filter.Eq(o => o.VerificationStatus, status);
-            return await _collection.Find(filter)
-                .SortByDescending(o => o.CreatedAt)
-                .ToListAsync();
+            return await _collection.Find(filter).ToListAsync();
         }
 
         public async Task<IEnumerable<Organization>> GetByRegionAsync(string region)
         {
             var filter = Builders<Organization>.Filter.AnyEq(o => o.OperatingRegions, region);
-            return await _collection.Find(filter)
-                .SortByDescending(o => o.CreatedAt)
-                .ToListAsync();
+            return await _collection.Find(filter).ToListAsync();
         }
 
         public async Task<IEnumerable<Organization>> GetByOrganizationTypeAsync(OrganizationType organizationType)
         {
             var filter = Builders<Organization>.Filter.Eq(o => o.OrganizationType, organizationType);
-            return await _collection.Find(filter)
-                .SortByDescending(o => o.CreatedAt)
-                .ToListAsync();
+            return await _collection.Find(filter).ToListAsync();
         }
 
         public async Task<bool> UpdateVerificationStatusAsync(string organizationId, VerificationStatus status, string verifiedById, DateTime verificationDate)
@@ -73,47 +65,212 @@ namespace RaiseYourVoice.Infrastructure.Persistence.Repositories
             return result.IsAcknowledged && result.ModifiedCount > 0;
         }
 
-        public async Task<IEnumerable<Organization>> SearchOrganizationsAsync(string searchTerm)
+        public async Task<bool> UpdateTeamMemberAsync(string organizationId, TeamMember updatedMember)
         {
-            var filter = Builders<Organization>.Filter.Or(
-                Builders<Organization>.Filter.Regex(o => o.Name, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i")),
-                Builders<Organization>.Filter.Regex(o => o.Description, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i")),
-                Builders<Organization>.Filter.Regex(o => o.MissionStatement, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i"))
+            var filter = Builders<Organization>.Filter.And(
+                Builders<Organization>.Filter.Eq(o => o.Id, organizationId),
+                Builders<Organization>.Filter.ElemMatch(o => o.TeamMembers, tm => tm.Id == updatedMember.Id)
             );
 
-            return await _collection.Find(filter)
-                .SortByDescending(o => o.CreatedAt)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Organization>> GetByLocationAsync(double latitude, double longitude, double maxDistanceInKm = 10)
-        {
-            // Convert km to radians (Earth's radius is approximately 6371 km)
-            double maxDistanceInRadians = maxDistanceInKm / 6371.0;
-
-            // Create a geospatial query to find organizations near the given coordinates
-            var filter = Builders<Organization>.Filter.NearSphere(
-                o => o.HeadquartersLocation,
-                longitude,
-                latitude,
-                maxDistanceInRadians
-            );
-
-            return await _collection.Find(filter)
-                .SortByDescending(o => o.CreatedAt)
-                .ToListAsync();
-        }
-
-        public async Task<bool> ApproveVerificationRequestAsync(string organizationId, string verifiedByUserId)
-        {
             var update = Builders<Organization>.Update
-                .Set(o => o.VerificationStatus, VerificationStatus.Verified)
-                .Set(o => o.VerifiedBy, verifiedByUserId)
-                .Set(o => o.VerificationDate, DateTime.UtcNow)
+                .Set(o => o.TeamMembers[-1], updatedMember) // [-1] updates the matched element
                 .Set(o => o.UpdatedAt, DateTime.UtcNow);
 
-            var result = await _collection.UpdateOneAsync(o => o.Id == organizationId, update);
+            var result = await _collection.UpdateOneAsync(filter, update);
             return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
+
+        public async Task<bool> AddProjectAsync(string organizationId, Project project)
+        {
+            var filter = Builders<Organization>.Filter.Eq(o => o.Id, organizationId);
+            var update = Builders<Organization>.Update
+                .Push(o => o.PastProjects, project)
+                .Set(o => o.UpdatedAt, DateTime.UtcNow);
+
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
+
+        public async Task<bool> UpdateImpactMetricsAsync(string organizationId, ImpactMetrics metrics)
+        {
+            var filter = Builders<Organization>.Filter.Eq(o => o.Id, organizationId);
+            var update = Builders<Organization>.Update
+                .Set(o => o.ImpactMetrics, metrics)
+                .Set(o => o.UpdatedAt, DateTime.UtcNow);
+
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
+
+        public async Task<bool> UpdateBankingInformationAsync(string organizationId, BankingInformation bankingInfo)
+        {
+            var filter = Builders<Organization>.Filter.Eq(o => o.Id, organizationId);
+            var update = Builders<Organization>.Update
+                .Set(o => o.BankingInformation, bankingInfo)
+                .Set(o => o.UpdatedAt, DateTime.UtcNow);
+
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
+
+        public async Task<bool> AddDocumentAsync(string organizationId, Document document, bool isVerificationDocument)
+        {
+            var filter = Builders<Organization>.Filter.Eq(o => o.Id, organizationId);
+            UpdateDefinition<Organization> update;
+
+            if (isVerificationDocument)
+            {
+                update = Builders<Organization>.Update
+                    .Push(o => o.VerificationDocuments, document)
+                    .Set(o => o.UpdatedAt, DateTime.UtcNow);
+            }
+            else
+            {
+                update = Builders<Organization>.Update
+                    .Push(o => o.LegalDocuments, document)
+                    .Set(o => o.UpdatedAt, DateTime.UtcNow);
+            }
+
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
+
+        public async Task<bool> UpdateContactInfoAsync(string organizationId, ContactInfo contactInfo)
+        {
+            var filter = Builders<Organization>.Filter.Eq(o => o.Id, organizationId);
+            var update = Builders<Organization>.Update
+                .Set(o => o.ContactInfo, contactInfo)
+                .Set(o => o.UpdatedAt, DateTime.UtcNow);
+
+            var result = await _collection.UpdateOneAsync(filter, update);
+            return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
+
+        public async Task<IEnumerable<Organization>> GetPaginatedOrganizationsAsync(
+            int pageNumber, 
+            int pageSize,
+            VerificationStatus? verificationStatus = null,
+            OrganizationType? organizationType = null,
+            string? region = null,
+            string? searchTerm = null,
+            string? sortBy = null,
+            bool ascending = true)
+        {
+            var filterBuilder = Builders<Organization>.Filter;
+            var filters = new List<FilterDefinition<Organization>>();
+
+            // Apply filters
+            if (verificationStatus.HasValue)
+            {
+                filters.Add(filterBuilder.Eq(o => o.VerificationStatus, verificationStatus.Value));
+            }
+
+            if (organizationType.HasValue)
+            {
+                filters.Add(filterBuilder.Eq(o => o.OrganizationType, organizationType.Value));
+            }
+
+            if (!string.IsNullOrEmpty(region))
+            {
+                filters.Add(filterBuilder.AnyEq(o => o.OperatingRegions, region));
+            }
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var searchFilter = filterBuilder.Or(
+                    filterBuilder.Regex(o => o.Name, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i")),
+                    filterBuilder.Regex(o => o.Description, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i")),
+                    filterBuilder.Regex(o => o.MissionStatement, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i"))
+                );
+                filters.Add(searchFilter);
+            }
+
+            var combinedFilter = filters.Count > 0
+                ? filterBuilder.And(filters)
+                : filterBuilder.Empty;
+
+            // Create sort definition
+            SortDefinition<Organization> sortDefinition;
+
+            if (!string.IsNullOrEmpty(sortBy))
+            {
+                // Map sortBy string to property expression
+                switch (sortBy.ToLower())
+                {
+                    case "name":
+                        sortDefinition = ascending
+                            ? Builders<Organization>.Sort.Ascending(o => o.Name)
+                            : Builders<Organization>.Sort.Descending(o => o.Name);
+                        break;
+                    case "foundingdate":
+                        sortDefinition = ascending
+                            ? Builders<Organization>.Sort.Ascending(o => o.FoundingDate)
+                            : Builders<Organization>.Sort.Descending(o => o.FoundingDate);
+                        break;
+                    case "verificationdate":
+                        sortDefinition = ascending
+                            ? Builders<Organization>.Sort.Ascending(o => o.VerificationDate)
+                            : Builders<Organization>.Sort.Descending(o => o.VerificationDate);
+                        break;
+                    default:
+                        sortDefinition = Builders<Organization>.Sort.Ascending(o => o.Name);
+                        break;
+                }
+            }
+            else
+            {
+                // Default sort by name ascending
+                sortDefinition = Builders<Organization>.Sort.Ascending(o => o.Name);
+            }
+
+            return await _collection
+                .Find(combinedFilter)
+                .Sort(sortDefinition)
+                .Skip((pageNumber - 1) * pageSize)
+                .Limit(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<long> CountOrganizationsAsync(
+            VerificationStatus? verificationStatus = null,
+            OrganizationType? organizationType = null,
+            string? region = null,
+            string? searchTerm = null)
+        {
+            var filterBuilder = Builders<Organization>.Filter;
+            var filters = new List<FilterDefinition<Organization>>();
+
+            // Apply filters
+            if (verificationStatus.HasValue)
+            {
+                filters.Add(filterBuilder.Eq(o => o.VerificationStatus, verificationStatus.Value));
+            }
+
+            if (organizationType.HasValue)
+            {
+                filters.Add(filterBuilder.Eq(o => o.OrganizationType, organizationType.Value));
+            }
+
+            if (!string.IsNullOrEmpty(region))
+            {
+                filters.Add(filterBuilder.AnyEq(o => o.OperatingRegions, region));
+            }
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var searchFilter = filterBuilder.Or(
+                    filterBuilder.Regex(o => o.Name, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i")),
+                    filterBuilder.Regex(o => o.Description, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i")),
+                    filterBuilder.Regex(o => o.MissionStatement, new MongoDB.Bson.BsonRegularExpression(searchTerm, "i"))
+                );
+                filters.Add(searchFilter);
+            }
+
+            var combinedFilter = filters.Count > 0
+                ? filterBuilder.And(filters)
+                : filterBuilder.Empty;
+
+            return await _collection.CountDocumentsAsync(combinedFilter);
         }
     }
 }
