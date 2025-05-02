@@ -3,7 +3,7 @@ package al.raiseyourvoice.android.domain.model
 import java.util.Date
 
 /**
- * Domain model representing a comment on a post.
+ * Domain model representing a comment in the application.
  */
 data class Comment(
     val id: String,

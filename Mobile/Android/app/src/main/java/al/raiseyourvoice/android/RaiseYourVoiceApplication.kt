@@ -2,8 +2,10 @@ package al.raiseyourvoice.android
 
 import android.app.Application
 import android.os.StrictMode
+import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
+@HiltAndroidApp
 class RaiseYourVoiceApplication : Application() {
     
     override fun onCreate() {
@@ -30,7 +32,6 @@ class RaiseYourVoiceApplication : Application() {
             )
         }
         
-        // TODO: Initialize dependency injection
         // TODO: Initialize crash reporting
         // TODO: Initialize analytics
     }

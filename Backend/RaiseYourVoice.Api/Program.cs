@@ -9,236 +9,325 @@ using RaiseYourVoice.Infrastructure.Persistence;
 using RaiseYourVoice.Infrastructure.Security;
 using RaiseYourVoice.Infrastructure.Persistence.Seeding;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.RateLimiting; // Added missing namespace for rate limiting
+using Microsoft.AspNetCore.RateLimiting;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
-var builder = WebApplication.CreateBuilder(args);
+// Initialize Serilog logger before anything else
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-// Configure environment-based configuration
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables("RYV_") // Add environment variables with RYV_ prefix for Kubernetes
-    .AddUserSecrets<Program>(optional: true); // Use user secrets for local development
-
-// Add services to the container
-builder.Services.AddControllers();
-
-// Configure strongly typed settings objects
-var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
-builder.Services.Configure<JwtSettings>(jwtSettingsSection);
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+try
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "RaiseYourVoice API", Version = "v1" });
-    
-    // Configure Swagger to use JWT authentication
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
+    Log.Information("Starting RaiseYourVoice API");
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-    
-    // Add API Key definition for Swagger
-    c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
-    {
-        Description = "API Key Authentication",
-        Name = "X-API-Key",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "ApiKeyScheme"
-    });
+    var builder = WebApplication.CreateBuilder(args);
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    // Configure Serilog with settings from configuration
+    builder.Host.UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithMachineName()
+        .Enrich.WithProcessId()
+        .Enrich.WithThreadId()
+        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
+        .WriteTo.File(
+            new CompactJsonFormatter(),
+            Path.Combine("Logs", "ryv-api-.log"),
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 30)
+        .WriteTo.MongoDB(
+            context.Configuration.GetConnectionString("MongoDbConnection") ?? throw new InvalidOperationException("MongoDB connection string is not configured."),
+            collectionName: "Logs",
+            restrictedToMinimumLevel: LogEventLevel.Information));
+
+    // Configure environment-based configuration
+    builder.Configuration
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+        .AddEnvironmentVariables("RYV_") // Add environment variables with RYV_ prefix for Kubernetes
+        .AddUserSecrets<Program>(optional: true); // Use user secrets for local development
+
+    // Add services to the container
+    builder.Services.AddControllers();
+
+    // Configure strongly typed settings objects
+    var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
+    builder.Services.Configure<JwtSettings>(jwtSettingsSection);
+
+    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
     {
+        c.SwaggerDoc("v1", new OpenApiInfo { Title = "RaiseYourVoice API", Version = "v1" });
+        
+        // Configure Swagger to use JWT authentication
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-            new OpenApiSecurityScheme
+            Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
             {
-                Reference = new OpenApiReference
+                new OpenApiSecurityScheme
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "ApiKey"
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
                 },
-                In = ParameterLocation.Header
-            },
-            new string[] {}
-        }
-    });
-});
-
-// Add Infrastructure services
-builder.Services.AddInfrastructureServices(builder.Configuration);
-
-// Add API Path Encryption services
-builder.Services.AddApiPathEncryption(builder.Configuration);
-
-// Add CORS policy
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
-
-// Configure JWT Authentication - now using JwtKeyManager
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    // Configure JWT Bearer token validation - we'll get the actual keys from the key manager when needed
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-        ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        ClockSkew = TimeSpan.Zero // Recommended for refresh token scenarios to avoid overlap
-    };
-
-    options.Events = new JwtBearerEvents
-    {
-        OnTokenValidated = context =>
-        {
-            var keyManager = context.HttpContext.RequestServices.GetRequiredService<JwtKeyManager>();
-            options.TokenValidationParameters.IssuerSigningKeys = keyManager.GetAllSigningKeys();
-            return Task.CompletedTask;
-        },
-        OnAuthenticationFailed = context =>
-        {
-            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-            {
-                // Add a custom header to indicate token expiration
-                context.Response.Headers.Append("Token-Expired", "true");
+                new string[] {}
             }
-            return Task.CompletedTask;
-        },
-        // This event is called when tokens are received - we refresh the token validation parameters
-        // to ensure we're using the latest keys for validation
-        OnMessageReceived = context =>
+        });
+        
+        // Add API Key definition for Swagger
+        c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
         {
-            var updatedKeyManager = context.HttpContext.RequestServices.GetRequiredService<JwtKeyManager>();
-            options.TokenValidationParameters.IssuerSigningKeys = updatedKeyManager.GetAllSigningKeys();
-            return Task.CompletedTask;
-        }
-    };
-});
+            Description = "API Key Authentication",
+            Name = "X-API-Key",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "ApiKeyScheme"
+        });
 
-// Add API rate limiting
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    
-    options.AddFixedWindowLimiter("fixed", options =>
-    {
-        options.AutoReplenishment = true;
-        options.PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100");
-        options.Window = TimeSpan.FromMinutes(1);
-        options.QueueLimit = 0; // No queuing, just reject when limit is hit
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "ApiKey"
+                    },
+                    In = ParameterLocation.Header
+                },
+                new string[] {}
+            }
+        });
     });
-});
 
-// Configure Health Checks
-builder.Services.AddHealthChecks()
-    .AddMongoDb()
-    .AddRedis(
-        redisConnectionString: builder.Configuration.GetConnectionString("RedisConnection") ?? throw new InvalidOperationException("Redis connection string is not configured."),
-        name: "redis",
-        failureStatus: HealthStatus.Degraded,
-        tags: new[] { "cache", "redis" });
+    // Add Infrastructure services
+    builder.Services.AddInfrastructureServices(builder.Configuration);
 
-var app = builder.Build();
+    // Add API Path Encryption services
+    builder.Services.AddApiPathEncryption(builder.Configuration);
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-// Add global error handling middleware (should be first in the pipeline)
-app.UseErrorHandling();
-
-app.UseHttpsRedirection();
-
-// Add security headers middleware
-app.UseSecurityHeaders();
-
-// Add localization middleware
-app.UseLocalization();
-
-// Add API path encryption middleware
-app.UseApiPathEncryption();
-
-// Add API key validation middleware
-app.UseApiKeyValidation();
-
-app.UseRateLimiter();
-app.UseCors("AllowAll");
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-app.MapHealthChecks("/health");
-
-// Log configuration source (but not values) for debugging
-if (app.Environment.IsDevelopment())
-{
-    var configurationSources = ((IConfigurationRoot)app.Configuration).Providers.Select(p => p.GetType().Name);
-    app.Logger.LogInformation("Configuration providers: {Providers}", string.Join(", ", configurationSources));
-}
-
-// Create MongoDB indexes during startup
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
-    await dbContext.EnsureIndexesAsync();
-    app.Logger.LogInformation("MongoDB indexes created successfully");
-    
-    // Seed initial data if in development environment or if SEED_DATA environment variable is set
-    bool seedData = app.Environment.IsDevelopment() || 
-                    !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SEED_DATA"));
-                    
-    if (seedData)
+    // Add CORS policy
+    builder.Services.AddCors(options =>
     {
-        try
+        options.AddPolicy("AllowAll", policy =>
         {
-            app.Logger.LogInformation("Seeding initial data...");
-            var dataSeeder = scope.ServiceProvider.GetRequiredService<DataSeederCoordinator>();
-            await dataSeeder.SeedAllAsync();
-            app.Logger.LogInformation("Data seeding completed successfully");
-        }
-        catch (Exception ex)
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+    });
+
+    // Configure JWT Authentication - now using JwtKeyManager
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        // Configure JWT Bearer token validation - we'll get the actual keys from the key manager when needed
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            app.Logger.LogError(ex, "An error occurred while seeding the database");
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            ClockSkew = TimeSpan.Zero // Recommended for refresh token scenarios to avoid overlap
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                var keyManager = context.HttpContext.RequestServices.GetRequiredService<JwtKeyManager>();
+                options.TokenValidationParameters.IssuerSigningKeys = keyManager.GetAllSigningKeys();
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = context =>
+            {
+                if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                {
+                    // Add a custom header to indicate token expiration
+                    context.Response.Headers.Append("Token-Expired", "true");
+                }
+                return Task.CompletedTask;
+            },
+            // This event is called when tokens are received - we refresh the token validation parameters
+            // to ensure we're using the latest keys for validation
+            OnMessageReceived = context =>
+            {
+                var updatedKeyManager = context.HttpContext.RequestServices.GetRequiredService<JwtKeyManager>();
+                options.TokenValidationParameters.IssuerSigningKeys = updatedKeyManager.GetAllSigningKeys();
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+    // Add API rate limiting
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        
+        options.AddFixedWindowLimiter("fixed", options =>
+        {
+            options.AutoReplenishment = true;
+            options.PermitLimit = Convert.ToInt32(builder.Configuration["SecuritySettings:ApiRateLimitPerMinute"] ?? "100");
+            options.Window = TimeSpan.FromMinutes(1);
+            options.QueueLimit = 0; // No queuing, just reject when limit is hit
+        });
+    });
+
+    // Configure Health Checks
+    builder.Services.AddHealthChecks()
+        .AddMongoDb(
+            connectionString: builder.Configuration.GetConnectionString("MongoDbConnection") ?? throw new InvalidOperationException("MongoDB connection string is not configured."),
+            name: "mongodb",
+            failureStatus: HealthStatus.Degraded,
+            tags: new[] { "db", "mongodb", "data" })
+        .AddRedis(
+            redisConnectionString: builder.Configuration.GetConnectionString("RedisConnection") ?? throw new InvalidOperationException("Redis connection string is not configured."),
+            name: "redis",
+            failureStatus: HealthStatus.Degraded,
+            tags: new[] { "cache", "redis" });
+
+    // Add health checks UI
+    builder.Services.AddHealthChecksUI(options =>
+    {
+        options.SetEvaluationTimeInSeconds(300); // Evaluate health every 5 minutes
+        options.MaximumHistoryEntriesPerEndpoint(50); // Keep history of 50 checks per endpoint
+        options.SetApiMaxActiveRequests(1); // Run health checks sequentially
+    }).AddInMemoryStorage();
+
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline with Serilog
+    app.UseSerilogRequestLogging(options =>
+    {
+        // Customize the message template
+        options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+        
+        // Attach additional properties
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+            diagnosticContext.Set("RemoteIpAddress", httpContext.Connection.RemoteIpAddress);
+            
+            // Add user identity information if authenticated
+            if (httpContext.User?.Identity?.IsAuthenticated == true)
+            {
+                diagnosticContext.Set("UserId", httpContext.User.Identity.Name);
+                diagnosticContext.Set("UserRoles", string.Join(",", 
+                    httpContext.User.Claims
+                        .Where(c => c.Type == "Role" || c.Type.EndsWith("/role", StringComparison.OrdinalIgnoreCase))
+                        .Select(c => c.Value)));
+            }
+        };
+    });
+
+    // Configure the HTTP request pipeline
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    // Add global error handling middleware (should be first in the pipeline)
+    app.UseErrorHandling();
+
+    app.UseHttpsRedirection();
+
+    // Add security headers middleware
+    app.UseSecurityHeaders();
+
+    // Add localization middleware
+    app.UseLocalization();
+
+    // Add API path encryption middleware
+    app.UseApiPathEncryption();
+
+    // Add API key validation middleware
+    app.UseApiKeyValidation();
+
+    app.UseRateLimiter();
+    app.UseCors("AllowAll");
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    // Map health checks with detailed responses
+    app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+    });
+
+    // Map health checks UI
+    app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
+
+    // Log configuration source (but not values) for debugging
+    if (app.Environment.IsDevelopment())
+    {
+        var configurationSources = ((IConfigurationRoot)app.Configuration).Providers.Select(p => p.GetType().Name);
+        Log.Information("Configuration providers: {Providers}", string.Join(", ", configurationSources));
+    }
+
+    // Create MongoDB indexes during startup
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
+        await dbContext.EnsureIndexesAsync();
+        Log.Information("MongoDB indexes created successfully");
+        
+        // Seed initial data if in development environment or if SEED_DATA environment variable is set
+        bool seedData = app.Environment.IsDevelopment() || 
+                        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SEED_DATA"));
+                        
+        if (seedData)
+        {
+            try
+            {
+                Log.Information("Seeding initial data...");
+                var dataSeeder = scope.ServiceProvider.GetRequiredService<DataSeederCoordinator>();
+                await dataSeeder.SeedAllAsync();
+                Log.Information("Data seeding completed successfully");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while seeding the database");
+            }
         }
     }
-}
 
-app.Run();
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
