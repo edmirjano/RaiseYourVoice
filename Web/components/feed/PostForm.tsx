@@ -1,8 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { createPost, Post } from '../../services/postService';
+import { Button } from '../common/Button/Button';
+import { FormField } from '../common/Form/FormField';
+import { Input } from '../common/Form/Input';
+import { TextArea } from '../common/Form/TextArea';
+import { Select } from '../common/Form/Select';
+import { FileUpload } from '../common/Form/FileUpload';
+import { Alert } from '../common/Alert/Alert';
+import { batchConvertToWebP } from '../common/MediaConverter/WebPConverter';
+import { checkVideoFormatCompatibility } from '../common/MediaConverter/WebMConverter';
+import { uploadFiles } from '../../services/mediaService';
 
 interface PostFormProps {
   onPostCreated?: (post: Post) => void;
@@ -17,40 +27,37 @@ export const PostForm: React.FC<PostFormProps> = ({ onPostCreated }) => {
   const [postType, setPostType] = useState<'Activism' | 'Opportunity' | 'SuccessStory'>('Activism');
   const [tags, setTags] = useState('');
   const [media, setMedia] = useState<File[]>([]);
-  const [mediaPreview, setMediaPreview] = useState<string[]>([]);
   const [location, setLocation] = useState('');
   const [eventDate, setEventDate] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [mediaUploadProgress, setMediaUploadProgress] = useState(0);
   
-  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setMedia([...media, ...filesArray]);
-      
-      // Create preview URLs
-      const newPreviews = filesArray.map(file => URL.createObjectURL(file));
-      setMediaPreview([...mediaPreview, ...newPreviews]);
-    }
+  const formRef = useRef<HTMLFormElement>(null);
+  
+  const handleMediaChange = (files: File[]) => {
+    setMedia(files);
   };
   
-  const removeMedia = (index: number) => {
-    const newMedia = [...media];
-    newMedia.splice(index, 1);
-    setMedia(newMedia);
+  const validateForm = () => {
+    if (!title.trim()) {
+      setError(t('errors.required'));
+      return false;
+    }
     
-    const newPreviews = [...mediaPreview];
-    URL.revokeObjectURL(newPreviews[index]);
-    newPreviews.splice(index, 1);
-    setMediaPreview(newPreviews);
+    if (!content.trim()) {
+      setError(t('errors.required'));
+      return false;
+    }
+    
+    return true;
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim() || !content.trim()) {
-      setError(t('errors.requiredFields'));
+    if (!validateForm()) {
       return;
     }
     
@@ -58,30 +65,51 @@ export const PostForm: React.FC<PostFormProps> = ({ onPostCreated }) => {
       setLoading(true);
       setError('');
       
-      // In a real implementation, we would upload media files first
-      // and then include the URLs in the post data
+      let mediaUrls: string[] = [];
       
-      const post: Post = {
-        title,
-        content,
-        postType,
-        tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        // mediaUrls would come from uploaded files
-        mediaUrls: [],
-      };
+      // Upload media files if any
+      if (media.length > 0) {
+        // Convert images to WebP format for better performance
+        const optimizedMedia = await batchConvertToWebP(media);
+        
+        // Check video compatibility
+        for (const file of optimizedMedia) {
+          if (file.type.startsWith('video/')) {
+            const compatibility = await checkVideoFormatCompatibility(file);
+            if (!compatibility.isCompatible) {
+              setError(compatibility.message);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+        
+        // Upload files
+        mediaUrls = await uploadFiles(optimizedMedia, 'posts');
+      }
       
+      // Parse location
+      let locationObj = null;
       if (location) {
         const [city, country] = location.split(',').map(part => part.trim());
-        post.location = {
+        locationObj = {
           city,
           country
         };
       }
       
-      if (eventDate && postType === 'Opportunity') {
-        post.eventDate = new Date(eventDate).toISOString();
-      }
+      // Create post object
+      const post: Post = {
+        title,
+        content,
+        postType,
+        tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        mediaUrls,
+        location: locationObj,
+        eventDate: eventDate ? new Date(eventDate).toISOString() : undefined,
+      };
       
+      // Submit post to API
       const createdPost = await createPost(post);
       
       // Reset form
@@ -90,7 +118,6 @@ export const PostForm: React.FC<PostFormProps> = ({ onPostCreated }) => {
       setPostType('Activism');
       setTags('');
       setMedia([]);
-      setMediaPreview([]);
       setLocation('');
       setEventDate('');
       
@@ -98,11 +125,17 @@ export const PostForm: React.FC<PostFormProps> = ({ onPostCreated }) => {
       if (onPostCreated) {
         onPostCreated(createdPost);
       }
+      
+      // Reset form using ref
+      if (formRef.current) {
+        formRef.current.reset();
+      }
     } catch (err) {
       console.error('Failed to create post:', err);
       setError(t('errors.postFailed'));
     } finally {
       setLoading(false);
+      setMediaUploadProgress(0);
     }
   };
   
@@ -116,133 +149,146 @@ export const PostForm: React.FC<PostFormProps> = ({ onPostCreated }) => {
       <h3 className="text-lg font-semibold mb-4">{t('feed.createPost')}</h3>
       
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+        <Alert 
+          variant="error" 
+          className="mb-4"
+          onClose={() => setError('')}
+        >
           {error}
-        </div>
+        </Alert>
       )}
       
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <input
-            type="text"
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+        <FormField
+          label={t('feed.postTitlePlaceholder')}
+          htmlFor="title"
+          required
+        >
+          <Input
+            id="title"
+            name="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder={t('feed.postTitlePlaceholder')}
-            className="w-full rounded-lg border border-gray-200 p-3 focus:border-ios-black focus:outline-none focus:ring-1 focus:ring-ios-black"
             required
           />
-        </div>
+        </FormField>
         
-        <div className="mb-4">
-          <textarea
+        <FormField
+          label={t('feed.postContentPlaceholder')}
+          htmlFor="content"
+          required
+        >
+          <TextArea
+            id="content"
+            name="content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={t('feed.postContentPlaceholder')}
-            className="w-full rounded-lg border border-gray-200 p-3 focus:border-ios-black focus:outline-none focus:ring-1 focus:ring-ios-black"
             rows={4}
             required
           />
-        </div>
+        </FormField>
         
-        <div className="mb-4">
-          <select
+        <FormField
+          label={t('feed.postType')}
+          htmlFor="postType"
+          required
+        >
+          <Select
+            id="postType"
+            name="postType"
             value={postType}
             onChange={(e) => setPostType(e.target.value as any)}
-            className="w-full rounded-lg border border-gray-200 p-3 focus:border-ios-black focus:outline-none focus:ring-1 focus:ring-ios-black"
-          >
-            <option value="Activism">{t('feed.postTypes.activism')}</option>
-            <option value="Opportunity">{t('feed.postTypes.opportunity')}</option>
-            <option value="SuccessStory">{t('feed.postTypes.successStory')}</option>
-          </select>
-        </div>
+            options={[
+              { value: 'Activism', label: t('feed.postTypes.activism') },
+              { value: 'Opportunity', label: t('feed.postTypes.opportunity') },
+              { value: 'SuccessStory', label: t('feed.postTypes.successStory') }
+            ]}
+          />
+        </FormField>
         
-        <div className="mb-4">
-          <input
-            type="text"
+        <FormField
+          label={t('feed.tagsPlaceholder')}
+          htmlFor="tags"
+          helpText={t('feed.tagsHelp')}
+        >
+          <Input
+            id="tags"
+            name="tags"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             placeholder={t('feed.tagsPlaceholder')}
-            className="w-full rounded-lg border border-gray-200 p-3 focus:border-ios-black focus:outline-none focus:ring-1 focus:ring-ios-black"
           />
-          <p className="mt-1 text-xs text-gray-500">{t('feed.tagsHelp')}</p>
-        </div>
+        </FormField>
         
         {postType === 'Opportunity' && (
           <>
-            <div className="mb-4">
-              <input
-                type="text"
+            <FormField
+              label={t('feed.locationPlaceholder')}
+              htmlFor="location"
+              helpText={t('feed.locationHelp')}
+            >
+              <Input
+                id="location"
+                name="location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder={t('feed.locationPlaceholder')}
-                className="w-full rounded-lg border border-gray-200 p-3 focus:border-ios-black focus:outline-none focus:ring-1 focus:ring-ios-black"
               />
-              <p className="mt-1 text-xs text-gray-500">{t('feed.locationHelp')}</p>
-            </div>
+            </FormField>
             
-            <div className="mb-4">
-              <input
-                type="date"
+            <FormField
+              label={t('opportunities.date')}
+              htmlFor="eventDate"
+              helpText={t('feed.eventDateHelp')}
+            >
+              <Input
+                id="eventDate"
+                name="eventDate"
+                type="datetime-local"
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 p-3 focus:border-ios-black focus:outline-none focus:ring-1 focus:ring-ios-black"
               />
-              <p className="mt-1 text-xs text-gray-500">{t('feed.eventDateHelp')}</p>
-            </div>
+            </FormField>
           </>
         )}
         
         {/* Media Upload */}
-        <div className="mb-4">
-          <label className="block mb-2">
-            <span className="sr-only">{t('feed.chooseMedia')}</span>
-            <input
-              type="file"
-              onChange={handleMediaChange}
-              accept="image/*,video/*"
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:bg-ios-black file:text-white
-                hover:file:bg-opacity-80"
-              multiple
-            />
-          </label>
-          
-          {/* Media Previews */}
-          {mediaPreview.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-              {mediaPreview.map((src, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={src}
-                    alt={`Preview ${index + 1}`}
-                    className="h-24 w-full rounded-md object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeMedia(index)}
-                    className="absolute top-1 right-1 rounded-full bg-white p-1 text-gray-500 shadow-sm hover:text-gray-700"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <FormField
+          label={t('feed.chooseMedia')}
+          htmlFor="media"
+        >
+          <FileUpload
+            onChange={handleMediaChange}
+            accept="image/*,video/*"
+            multiple
+            maxFiles={5}
+            maxSize={10} // 10MB
+            value={media}
+          />
+        </FormField>
+        
+        {/* Media Upload Progress */}
+        {loading && mediaUploadProgress > 0 && (
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-ios-black h-2.5 rounded-full" 
+              style={{ width: `${mediaUploadProgress}%` }}
+            ></div>
+            <p className="text-xs text-gray-500 mt-1">
+              {t('feed.uploading')}: {mediaUploadProgress}%
+            </p>
+          </div>
+        )}
         
         <div className="flex justify-end">
-          <button
+          <Button
             type="submit"
             disabled={loading || !title.trim() || !content.trim()}
-            className="ios-button"
           >
             {loading ? t('feed.posting') : t('feed.post')}
-          </button>
+          </Button>
         </div>
       </form>
     </motion.div>

@@ -2,31 +2,41 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'next-i18next';
-import { Post } from '../../services/postService';
 import { formatDistanceToNow } from 'date-fns';
+import { Post } from '../../services/postService';
+import { Avatar } from '../common/Avatar/Avatar';
+import { Badge } from '../common/Badge/Badge';
+import { ImageOptimizer } from '../common/ImageOptimizer/ImageOptimizer';
+import { VideoPlayer } from '../common/VideoPlayer/VideoPlayer';
 
 interface PostCardProps {
   post: Post;
-  onLike?: (id: string) => void;
-  onComment?: (id: string) => void;
+  onLike?: () => void;
+  onComment?: () => void;
+  isLiked?: boolean;
+  className?: string;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment }) => {
+export const PostCard: React.FC<PostCardProps> = ({ 
+  post, 
+  onLike, 
+  onComment, 
+  isLiked = false,
+  className = '' 
+}) => {
   const { t } = useTranslation('common');
-  const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   
   const handleLike = () => {
-    if (onLike && post.id) {
-      onLike(post.id);
-      setIsLiked(!isLiked);
+    if (onLike) {
+      onLike();
       setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
     }
   };
   
   const handleComment = () => {
-    if (onComment && post.id) {
-      onComment(post.id);
+    if (onComment) {
+      onComment();
     }
   };
   
@@ -39,22 +49,42 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment }) =
     }
   };
   
+  // Determine if media is video or image
+  const isVideo = (url: string) => {
+    return url.match(/\.(mp4|webm|ogg|mov)($|\?)/i);
+  };
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="ios-card overflow-hidden"
+      className={`ios-card overflow-hidden ${className}`}
     >
       {/* Post Header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center">
-          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-semibold">
-            {post.authorId?.charAt(0) || 'U'}
-          </div>
+          <Avatar 
+            src={post.authorProfilePicUrl} 
+            name={post.authorName || 'User'} 
+            size="md" 
+          />
           <div className="ml-3">
-            <p className="text-sm font-medium text-gray-900">{post.authorId}</p>
+            <p className="text-sm font-medium text-gray-900">{post.authorName || 'Anonymous'}</p>
             <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
+          </div>
+          
+          {/* Post Type Badge */}
+          <div className="ml-auto">
+            <Badge 
+              variant={
+                post.postType === 'Activism' ? 'primary' : 
+                post.postType === 'Opportunity' ? 'success' : 
+                'secondary'
+              }
+            >
+              {t(`feed.postTypes.${post.postType.toLowerCase()}`)}
+            </Badge>
           </div>
         </div>
       </div>
@@ -64,16 +94,25 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment }) =
         <Link href={`/posts/${post.id}`}>
           <h3 className="text-lg font-semibold mb-2 hover:underline">{post.title}</h3>
         </Link>
-        <p className="text-gray-700 mb-4">{post.content}</p>
+        <p className="text-gray-700 mb-4 whitespace-pre-line line-clamp-3">{post.content}</p>
         
         {/* Post Media */}
         {post.mediaUrls && post.mediaUrls.length > 0 && (
           <div className="mb-4 rounded-lg overflow-hidden">
-            <img 
-              src={post.mediaUrls[0]} 
-              alt={post.title} 
-              className="w-full h-64 object-cover"
-            />
+            {isVideo(post.mediaUrls[0]) ? (
+              <VideoPlayer 
+                src={post.mediaUrls[0]} 
+                poster={post.mediaUrls.length > 1 ? post.mediaUrls[1] : undefined}
+                controls
+                className="w-full h-64 object-cover"
+              />
+            ) : (
+              <ImageOptimizer 
+                src={post.mediaUrls[0]} 
+                alt={post.title} 
+                className="w-full h-64 object-cover"
+              />
+            )}
           </div>
         )}
         
@@ -112,7 +151,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment }) =
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>
-                  {new Date(post.eventDate).toLocaleDateString()}
+                  {new Date(post.eventDate).toLocaleDateString()} {new Date(post.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             )}
