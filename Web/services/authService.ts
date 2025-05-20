@@ -1,4 +1,5 @@
 import apiClient from './apiClient';
+import Cookies from 'js-cookie';
 
 export type LoginCredentials = {
   email: string;
@@ -36,6 +37,9 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
       email: response.data.email,
       role: response.data.role
     }));
+    
+    // Also store in cookies for SSR
+    Cookies.set('token', response.data.token, { secure: true, sameSite: 'strict' });
   }
   
   return response.data;
@@ -54,23 +58,41 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
       email: response.data.email,
       role: response.data.role
     }));
+    
+    // Also store in cookies for SSR
+    Cookies.set('token', response.data.token, { secure: true, sameSite: 'strict' });
   }
   
   return response.data;
 };
 
 export const logout = () => {
+  // Call the logout endpoint to invalidate the refresh token
+  apiClient.post('/auth/logout', { 
+    refreshToken: localStorage.getItem('refreshToken') 
+  }).catch(err => {
+    console.error('Error during logout:', err);
+  });
+  
+  // Clear local storage and cookies
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
+  Cookies.remove('token');
 };
 
 export const refreshToken = async (refreshToken: string): Promise<AuthResponse> => {
-  const response = await apiClient.post<AuthResponse>('/auth/refresh-token', { refreshToken });
+  const response = await apiClient.post<AuthResponse>('/auth/refresh-token', { 
+    token: localStorage.getItem('token'),
+    refreshToken 
+  });
   
   if (response.data.token) {
     localStorage.setItem('token', response.data.token);
     localStorage.setItem('refreshToken', response.data.refreshToken);
+    
+    // Also update in cookies for SSR
+    Cookies.set('token', response.data.token, { secure: true, sameSite: 'strict' });
   }
   
   return response.data;
@@ -119,6 +141,9 @@ export const handleOAuthCallback = async (token: string): Promise<AuthResponse> 
       email: response.data.email,
       role: response.data.role
     }));
+    
+    // Also store in cookies for SSR
+    Cookies.set('token', response.data.token, { secure: true, sameSite: 'strict' });
   }
   
   return response.data;

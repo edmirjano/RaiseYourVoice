@@ -242,7 +242,65 @@
       "registerButton": "Register",
       "haveAccount": "Already have an account?",
       "login": "Log In"
-    }
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "emailLabel": "Email",
+      "submitButton": "Send Reset Link",
+      "backToLogin": "Back to Login"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "description": "Enter your new password below.",
+      "newPasswordLabel": "New Password",
+      "confirmPasswordLabel": "Confirm New Password",
+      "submitButton": "Reset Password",
+      "successTitle": "Password Reset Successful",
+      "successMessage": "Your password has been reset successfully. You can now log in with your new password.",
+      "loginButton": "Log In"
+    },
+    "verifyEmail": {
+      "title": "Verify Your Email",
+      "description": "Please check your email and click the verification link to complete your registration.",
+      "resendButton": "Resend Verification Email",
+      "successTitle": "Email Verified",
+      "successMessage": "Your email has been verified successfully. You can now log in to your account.",
+      "errorTitle": "Verification Failed",
+      "errorMessage": "We couldn't verify your email. The link may have expired or is invalid.",
+      "backToLogin": "Back to Login"
+    },
+    "orContinueWith": "Or continue with",
+    "socialLoginError": "Error logging in with social provider. Please try again.",
+    "invalidCredentials": "Invalid email or password. Please try again.",
+    "loginError": "An error occurred during login. Please try again.",
+    "registrationError": "An error occurred during registration. Please try again.",
+    "emailAlreadyExists": "An account with this email already exists.",
+    "passwordRequirements": "Password must be at least 8 characters and include letters and numbers.",
+    "termsDisclaimer": "By registering, you agree to our",
+    "termsLink": "Terms of Service",
+    "andWord": "and",
+    "privacyLink": "Privacy Policy",
+    "sessionExpired": "Your session has expired. Please log in again.",
+    "emailSent": "Email Sent",
+    "checkEmailForReset": "Please check your email for a link to reset your password.",
+    "passwordResetSuccess": "Password Reset Successful",
+    "passwordResetSuccessMessage": "Your password has been reset successfully. You can now log in with your new password.",
+    "loginNow": "Log In Now",
+    "noResetToken": "No reset token provided. Please use the link from your email.",
+    "invalidOrExpiredToken": "The reset token is invalid or has expired.",
+    "resetPasswordError": "An error occurred while resetting your password. Please try again.",
+    "verifyingEmail": "Verifying Your Email",
+    "pleaseWait": "Please wait while we verify your email...",
+    "emailVerified": "Email Verified Successfully",
+    "emailVerifiedDescription": "Your email has been verified. You can now log in to your account.",
+    "verificationFailed": "Email Verification Failed",
+    "verificationError": "We couldn't verify your email. The link may have expired or is invalid.",
+    "missingToken": "No verification token provided. Please use the link from your email.",
+    "invalidVerificationToken": "The verification token is invalid or has expired.",
+    "processingLogin": "Processing Login",
+    "oauthMissingToken": "No authentication token received from the provider.",
+    "oauthError": "An error occurred during social login. Please try again."
   },
   "notifications": {
     "title": "Notifications",
@@ -283,7 +341,8 @@
     "tryAgain": "Try Again",
     "loading": "Loading...",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "optional": "optional"
   },
   "roles": {
     "admin": "Administrator",

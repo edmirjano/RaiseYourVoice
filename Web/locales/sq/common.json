@@ -242,7 +242,65 @@
       "registerButton": "Regjistrohu",
       "haveAccount": "Tashmë keni një llogari?",
       "login": "Hyr"
-    }
+    },
+    "forgotPassword": {
+      "title": "Harrove Fjalëkalimin",
+      "description": "Vendosni adresën tuaj të emailit dhe ne do t'ju dërgojmë një lidhje për të rivendosur fjalëkalimin tuaj.",
+      "emailLabel": "Email",
+      "submitButton": "Dërgo Lidhjen e Rivendosjes",
+      "backToLogin": "Kthehu tek Hyrja"
+    },
+    "resetPassword": {
+      "title": "Rivendos Fjalëkalimin",
+      "description": "Vendosni fjalëkalimin tuaj të ri më poshtë.",
+      "newPasswordLabel": "Fjalëkalimi i Ri",
+      "confirmPasswordLabel": "Konfirmo Fjalëkalimin e Ri",
+      "submitButton": "Rivendos Fjalëkalimin",
+      "successTitle": "Fjalëkalimi u Rivendos me Sukses",
+      "successMessage": "Fjalëkalimi juaj është rivendosur me sukses. Tani mund të hyni me fjalëkalimin tuaj të ri.",
+      "loginButton": "Hyr Tani"
+    },
+    "verifyEmail": {
+      "title": "Verifiko Emailin Tënd",
+      "description": "Ju lutemi kontrolloni emailin tuaj dhe klikoni lidhjen e verifikimit për të përfunduar regjistrimin tuaj.",
+      "resendButton": "Ridërgo Emailin e Verifikimit",
+      "successTitle": "Emaili u Verifikua",
+      "successMessage": "Emaili juaj është verifikuar me sukses. Tani mund të hyni në llogarinë tuaj.",
+      "errorTitle": "Verifikimi Dështoi",
+      "errorMessage": "Nuk mund të verifikonim emailin tuaj. Lidhja mund të ketë skaduar ose është e pavlefshme.",
+      "backToLogin": "Kthehu tek Hyrja"
+    },
+    "orContinueWith": "Ose vazhdo me",
+    "socialLoginError": "Gabim gjatë hyrjes me ofruesin social. Ju lutemi provoni përsëri.",
+    "invalidCredentials": "Email ose fjalëkalim i pavlefshëm. Ju lutemi provoni përsëri.",
+    "loginError": "Ndodhi një gabim gjatë hyrjes. Ju lutemi provoni përsëri.",
+    "registrationError": "Ndodhi një gabim gjatë regjistrimit. Ju lutemi provoni përsëri.",
+    "emailAlreadyExists": "Një llogari me këtë email tashmë ekziston.",
+    "passwordRequirements": "Fjalëkalimi duhet të jetë të paktën 8 karaktere dhe të përfshijë shkronja dhe numra.",
+    "termsDisclaimer": "Duke u regjistruar, ju pranoni",
+    "termsLink": "Kushtet e Shërbimit",
+    "andWord": "dhe",
+    "privacyLink": "Politikën e Privatësisë",
+    "sessionExpired": "Sesioni juaj ka skaduar. Ju lutemi hyni përsëri.",
+    "emailSent": "Emaili u Dërgua",
+    "checkEmailForReset": "Ju lutemi kontrolloni emailin tuaj për një lidhje për të rivendosur fjalëkalimin tuaj.",
+    "passwordResetSuccess": "Fjalëkalimi u Rivendos me Sukses",
+    "passwordResetSuccessMessage": "Fjalëkalimi juaj është rivendosur me sukses. Tani mund të hyni me fjalëkalimin tuaj të ri.",
+    "loginNow": "Hyr Tani",
+    "noResetToken": "Nuk është dhënë asnjë token rivendosjeje. Ju lutemi përdorni lidhjen nga emaili juaj.",
+    "invalidOrExpiredToken": "Tokeni i rivendosjes është i pavlefshëm ose ka skaduar.",
+    "resetPasswordError": "Ndodhi një gabim gjatë rivendosjes së fjalëkalimit tuaj. Ju lutemi provoni përsëri.",
+    "verifyingEmail": "Duke Verifikuar Emailin Tuaj",
+    "pleaseWait": "Ju lutemi prisni ndërsa verifikojmë emailin tuaj...",
+    "emailVerified": "Emaili u Verifikua me Sukses",
+    "emailVerifiedDescription": "Emaili juaj është verifikuar. Tani mund të hyni në llogarinë tuaj.",
+    "verificationFailed": "Verifikimi i Emailit Dështoi",
+    "verificationError": "Nuk mund të verifikonim emailin tuaj. Lidhja mund të ketë skaduar ose është e pavlefshme.",
+    "missingToken": "Nuk është dhënë asnjë token verifikimi. Ju lutemi përdorni lidhjen nga emaili juaj.",
+    "invalidVerificationToken": "Tokeni i verifikimit është i pavlefshëm ose ka skaduar.",
+    "processingLogin": "Duke Procesuar Hyrjen",
+    "oauthMissingToken": "Nuk u mor asnjë token autentifikimi nga ofruesi.",
+    "oauthError": "Ndodhi një gabim gjatë hyrjes sociale. Ju lutemi provoni përsëri."
   },
   "notifications": {
     "title": "Njoftimet",
@@ -283,7 +341,8 @@
     "tryAgain": "Provo Përsëri",
     "loading": "Duke ngarkuar...",
     "enabled": "Aktivizuar",
-    "disabled": "Çaktivizuar"
+    "disabled": "Çaktivizuar",
+    "optional": "opsionale"
   },
   "roles": {
     "admin": "Administrator",

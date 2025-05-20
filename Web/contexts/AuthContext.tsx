@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const forgotPassword = async (email: string) => {
     try {
       await authService.forgotPassword(email);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Forgot password error:', error);
       throw error;
     }
@@ -122,7 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const resetPassword = async (token: string, newPassword: string) => {
     try {
       await authService.resetPassword(token, newPassword);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Reset password error:', error);
       throw error;
     }
