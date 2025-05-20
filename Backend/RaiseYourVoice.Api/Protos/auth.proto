@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+option csharp_namespace = "RaiseYourVoice.Api.Protos";
+
+package auth;
+
+// The authentication service definition
+service AuthService {
+  // Login with email and password
+  rpc Login (LoginRequest) returns (AuthResponse);
+  
+  // Register a new user
+  rpc Register (RegisterRequest) returns (AuthResponse);
+  
+  // Refresh an access token using a refresh token
+  rpc RefreshToken (RefreshTokenRequest) returns (AuthResponse);
+  
+  // Logout and invalidate refresh token
+  rpc Logout (LogoutRequest) returns (LogoutResponse);
+  
+  // Get the current authenticated user
+  rpc GetCurrentUser (GetCurrentUserRequest) returns (UserResponse);
+}
+
+// Request message for Login
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// Request message for Register
+message RegisterRequest {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+  string profile_picture = 4;
+  string bio = 5;
+  string preferred_language = 6;
+}
+
+// Request message for RefreshToken
+message RefreshTokenRequest {
+  string token = 1;
+  string refresh_token = 2;
+}
+
+// Request message for Logout
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+// Response message for Logout
+message LogoutResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request message for GetCurrentUser
+message GetCurrentUserRequest {
+  // Empty request, authentication is handled via token
+}
+
+// Response message for authentication operations
+message AuthResponse {
+  string user_id = 1;
+  string name = 2;
+  string email = 3;
+  string role = 4;
+  string token = 5;
+  string refresh_token = 6;
+}
+
+// Response message containing a user
+message UserResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string role = 4;
+  string profile_picture = 5;
+  string bio = 6;
+  string join_date = 7;
+  string last_login = 8;
+  string preferred_language = 9;
+  NotificationSettingsModel notification_settings = 10;
+}
+
+// Notification settings model
+message NotificationSettingsModel {
+  bool email_notifications = 1;
+  bool push_notifications = 2;
+  bool new_post_notifications = 3;
+  bool comment_notifications = 4;
+  bool event_reminders = 5;
+  string preferred_notification_time = 6;
+}

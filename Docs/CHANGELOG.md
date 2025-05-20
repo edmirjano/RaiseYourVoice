@@ -1,5 +1,25 @@
 # Changelog
 
+## [gRPC Services Implementation - Week 10] - 2025-05-04
+
+### Added
+- Implemented gRPC services for mobile app communication:
+  - Created protocol buffer definitions for Auth, Post, and Comment services
+  - Implemented AuthServiceImpl for mobile authentication
+  - Implemented PostServiceImpl for post management
+  - Implemented CommentServiceImpl for comment functionality
+  - Added proper error handling and status codes
+  - Configured gRPC services in Program.cs
+  - Added required NuGet packages for gRPC support
+- Updated Program.cs to map gRPC services
+- Added proper authentication and authorization in gRPC services
+- Implemented pagination support in gRPC responses
+
+### Improved
+- Enhanced API security with proper error handling in gRPC services
+- Added detailed logging for gRPC service operations
+- Optimized data transfer with efficient protocol buffer serialization
+
 ## [Data Access Layer Enhancements - Week 3] - 2025-05-03
 
 ### Added
@@ -312,6 +332,7 @@ Stripe.net
 - ✅ Environment-based configuration for secrets management
 - ✅ Kubernetes-compatible secrets strategy with documentation
 - ✅ JWT signing key rotation implementation
+- ✅ gRPC services for mobile app communication
 
 ### Pending
 - ⏳ Automated tests for security features

@@ -15,6 +15,7 @@ using Serilog.Events;
 using Serilog.Formatting.Compact;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
+using RaiseYourVoice.Api.gRPC;
 
 // Initialize Serilog logger before anything else
 Log.Logger = new LoggerConfiguration()
@@ -220,6 +221,14 @@ try
         options.SetApiMaxActiveRequests(1); // Run health checks sequentially
     }).AddInMemoryStorage();
 
+    // Add gRPC services
+    builder.Services.AddGrpc(options =>
+    {
+        options.EnableDetailedErrors = true;
+        options.MaxReceiveMessageSize = 16 * 1024 * 1024; // 16 MB
+        options.MaxSendMessageSize = 16 * 1024 * 1024; // 16 MB
+    });
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline with Serilog
@@ -277,6 +286,10 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
+    
+    // Map gRPC services
+    app.MapGrpcService<PostServiceImpl>();
+    app.MapGrpcService<AuthServiceImpl>();
 
     // Map health checks with detailed responses
     app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions

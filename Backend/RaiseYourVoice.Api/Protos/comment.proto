@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+option csharp_namespace = "RaiseYourVoice.Api.Protos";
+
+package comment;
+
+// The comment service definition
+service CommentService {
+  // Get comments for a post
+  rpc GetCommentsByPost (GetCommentsByPostRequest) returns (GetCommentsResponse);
+  
+  // Get a specific comment
+  rpc GetComment (GetCommentRequest) returns (CommentResponse);
+  
+  // Get replies to a comment
+  rpc GetReplies (GetRepliesRequest) returns (GetCommentsResponse);
+  
+  // Add a comment to a post
+  rpc AddComment (AddCommentRequest) returns (CommentResponse);
+  
+  // Add a reply to a comment
+  rpc AddReply (AddReplyRequest) returns (CommentResponse);
+  
+  // Update a comment
+  rpc UpdateComment (UpdateCommentRequest) returns (CommentResponse);
+  
+  // Delete a comment
+  rpc DeleteComment (DeleteCommentRequest) returns (DeleteCommentResponse);
+  
+  // Like a comment
+  rpc LikeComment (LikeCommentRequest) returns (LikeCommentResponse);
+}
+
+// Request message for GetCommentsByPost
+message GetCommentsByPostRequest {
+  string post_id = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+  string sort_by = 4;
+  bool ascending = 5;
+  bool include_replies = 6;
+}
+
+// Response message for GetComments
+message GetCommentsResponse {
+  repeated CommentModel comments = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+  int64 total_items = 4;
+  int32 total_pages = 5;
+  bool has_previous_page = 6;
+  bool has_next_page = 7;
+}
+
+// Request message for GetComment
+message GetCommentRequest {
+  string id = 1;
+}
+
+// Response message containing a comment
+message CommentResponse {
+  CommentModel comment = 1;
+}
+
+// Request message for GetReplies
+message GetRepliesRequest {
+  string comment_id = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+}
+
+// Request message for AddComment
+message AddCommentRequest {
+  string post_id = 1;
+  string content = 2;
+}
+
+// Request message for AddReply
+message AddReplyRequest {
+  string parent_comment_id = 1;
+  string content = 2;
+}
+
+// Request message for UpdateComment
+message UpdateCommentRequest {
+  string id = 1;
+  string content = 2;
+}
+
+// Request message for DeleteComment
+message DeleteCommentRequest {
+  string id = 1;
+}
+
+// Response message for DeleteComment
+message DeleteCommentResponse {
+  bool success = 1;
+}
+
+// Request message for LikeComment
+message LikeCommentRequest {
+  string comment_id = 1;
+}
+
+// Response message for LikeComment
+message LikeCommentResponse {
+  bool success = 1;
+  int32 like_count = 2;
+}
+
+// Comment model
+message CommentModel {
+  string id = 1;
+  string post_id = 2;
+  string author_id = 3;
+  string author_name = 4;
+  string author_profile_pic_url = 5;
+  string content = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  int32 like_count = 9;
+  bool is_liked_by_current_user = 10;
+  string parent_comment_id = 11;
+  int32 child_comment_count = 12;
+}

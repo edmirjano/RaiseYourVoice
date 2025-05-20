@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+option csharp_namespace = "RaiseYourVoice.Api.Protos";
+
+package post;
+
+// The post service definition
+service PostService {
+  // Get all posts
+  rpc GetPosts (GetPostsRequest) returns (GetPostsResponse);
+  
+  // Get post by ID
+  rpc GetPost (GetPostRequest) returns (PostResponse);
+  
+  // Create a new post
+  rpc CreatePost (CreatePostRequest) returns (PostResponse);
+  
+  // Update an existing post
+  rpc UpdatePost (UpdatePostRequest) returns (PostResponse);
+  
+  // Delete a post
+  rpc DeletePost (DeletePostRequest) returns (DeletePostResponse);
+  
+  // Like a post
+  rpc LikePost (LikePostRequest) returns (LikePostResponse);
+  
+  // Get posts by type
+  rpc GetPostsByType (GetPostsByTypeRequest) returns (GetPostsResponse);
+  
+  // Get posts by user
+  rpc GetPostsByUser (GetPostsByUserRequest) returns (GetPostsResponse);
+  
+  // Search posts
+  rpc SearchPosts (SearchPostsRequest) returns (GetPostsResponse);
+}
+
+// Request message for GetPosts
+message GetPostsRequest {
+  int32 page_number = 1;
+  int32 page_size = 2;
+  string sort_by = 3;
+  bool ascending = 4;
+}
+
+// Response message for GetPosts
+message GetPostsResponse {
+  repeated PostModel posts = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+  int64 total_items = 4;
+  int32 total_pages = 5;
+  bool has_previous_page = 6;
+  bool has_next_page = 7;
+}
+
+// Request message for GetPost
+message GetPostRequest {
+  string id = 1;
+}
+
+// Response message containing a post
+message PostResponse {
+  PostModel post = 1;
+}
+
+// Request message for CreatePost
+message CreatePostRequest {
+  string title = 1;
+  string content = 2;
+  repeated string media_urls = 3;
+  string post_type = 4;
+  repeated string tags = 5;
+  LocationModel location = 6;
+  string event_date = 7;
+}
+
+// Request message for UpdatePost
+message UpdatePostRequest {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+  repeated string media_urls = 4;
+  string post_type = 5;
+  repeated string tags = 6;
+  LocationModel location = 7;
+  string event_date = 8;
+}
+
+// Request message for DeletePost
+message DeletePostRequest {
+  string id = 1;
+}
+
+// Response message for DeletePost
+message DeletePostResponse {
+  bool success = 1;
+}
+
+// Request message for LikePost
+message LikePostRequest {
+  string post_id = 1;
+}
+
+// Response message for LikePost
+message LikePostResponse {
+  bool success = 1;
+  int32 like_count = 2;
+}
+
+// Request message for GetPostsByType
+message GetPostsByTypeRequest {
+  string post_type = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+}
+
+// Request message for GetPostsByUser
+message GetPostsByUserRequest {
+  string user_id = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+}
+
+// Request message for SearchPosts
+message SearchPostsRequest {
+  string query = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+}
+
+// Post model
+message PostModel {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+  repeated string media_urls = 4;
+  string post_type = 5;
+  string author_id = 6;
+  string author_name = 7;
+  string author_profile_pic_url = 8;
+  string created_at = 9;
+  string updated_at = 10;
+  int32 like_count = 11;
+  int32 comment_count = 12;
+  bool is_liked_by_current_user = 13;
+  repeated string tags = 14;
+  LocationModel location = 15;
+  string event_date = 16;
+  string status = 17;
+}
+
+// Location model
+message LocationModel {
+  double latitude = 1;
+  double longitude = 2;
+  string address = 3;
+  string city = 4;
+  string country = 5;
+}
