@@ -75,3 +75,13 @@ export const addCampaignUpdate = async (campaignId: string, update: { title: str
 export const addCampaignMilestone = async (campaignId: string, milestone: { title: string; description: string; targetAmount: number }): Promise<void> => {
   await apiClient.post(`/campaigns/${campaignId}/milestones`, milestone);
 };
+
+export const searchCampaigns = async (query: string): Promise<Campaign[]> => {
+  const response = await apiClient.get<Campaign[]>(`/campaigns/search?query=${encodeURIComponent(query)}`);
+  return response.data;
+};
+
+export const getCampaignsByOrganization = async (organizationId: string): Promise<Campaign[]> => {
+  const response = await apiClient.get<Campaign[]>(`/campaigns?organizationId=${organizationId}`);
+  return response.data;
+};

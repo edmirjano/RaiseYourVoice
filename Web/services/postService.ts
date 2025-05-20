@@ -64,3 +64,8 @@ export const deletePost = async (id: string): Promise<void> => {
 export const likePost = async (id: string): Promise<void> => {
   await apiClient.post(`/posts/${id}/like`);
 };
+
+export const searchPosts = async (query: string): Promise<Post[]> => {
+  const response = await apiClient.get<Post[]>(`/posts/search?query=${encodeURIComponent(query)}`);
+  return response.data;
+};
