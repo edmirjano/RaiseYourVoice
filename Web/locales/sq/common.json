@@ -7,10 +7,13 @@
     "feed": "Postimet Sociale",
     "opportunities": "Mundësitë",
     "successStories": "Histori Suksesi",
+    "campaigns": "Fushata",
+    "organizations": "Organizatat",
     "profile": "Profili",
     "login": "Hyr",
     "register": "Regjistrohu",
-    "logout": "Dil"
+    "logout": "Dil",
+    "adminDashboard": "Paneli i Administratorit"
   },
   "footer": {
     "tagline": "Duke fuqizuar aktivistët në mbarë botën",
@@ -24,17 +27,49 @@
     "title": "Postimet Sociale",
     "description": "Lidhu me aktivistë dhe organizata që po bëjnë ndryshime.",
     "createPost": "Krijo Postim",
+    "postTitlePlaceholder": "Titulli i postimit tuaj",
+    "postContentPlaceholder": "Ndani mendimet, idetë ose përvojat tuaja...",
+    "tagsPlaceholder": "Shtoni etiketa të ndara me presje",
+    "tagsHelp": "Etiketat ndihmojnë të tjerët të gjejnë përmbajtjen tuaj",
+    "locationPlaceholder": "Qyteti, Shteti",
+    "locationHelp": "Shtoni vendndodhjen për ngjarje dhe mundësi",
+    "eventDateHelp": "Shtoni datën për ngjarje dhe mundësi",
+    "chooseMedia": "Zgjidhni skedarët e medias",
+    "posting": "Duke postuar...",
+    "post": "Posto",
     "likes": "Pëlqime",
     "comments": "Komente",
     "noPosts": {
       "title": "Nuk ka postime ende",
       "description": "Bëhu i pari që ndan udhëtimin tënd të aktivizmit!"
+    },
+    "postTypes": {
+      "activism": "Postim Aktivizmi",
+      "opportunity": "Mundësi",
+      "successStory": "Histori Suksesi"
     }
+  },
+  "comments": {
+    "title": "Komentet",
+    "placeholder": "Shkruaj një koment...",
+    "submit": "Posto Komentin",
+    "submitting": "Duke postuar...",
+    "loginToComment": "Hyni për t'u bashkuar me bisedën",
+    "noComments": "Nuk ka komente ende. Bëhu i pari që komenton!",
+    "like": "Pëlqej",
+    "reply": "Përgjigju"
   },
   "opportunities": {
     "title": "Mundësitë",
     "description": "Zbulo financime, ngjarje dhe mënyra për t'u përfshirë.",
     "createOpportunity": "Krijo Mundësi",
+    "viewDetails": "Shiko Detajet",
+    "register": "Regjistrohu",
+    "share": "Ndaj",
+    "saveToCalendar": "Ruaj në Kalendar",
+    "location": "Vendndodhja",
+    "date": "Data",
+    "description": "Përshkrimi",
     "categories": {
       "funding": "Financim",
       "events": "Ngjarje",
@@ -50,11 +85,139 @@
   "successStories": {
     "title": "Histori Suksesi",
     "description": "Mëso nga fushata të suksesshme aktivizmi dhe individë frymëzues.",
+    "createStory": "Ndaj Historinë Tënde",
+    "readMore": "Lexo Më Shumë",
     "featuredActivist": "Aktivisti i Muajit",
     "organizationSpotlight": "Organizata në Fokus",
     "noStories": {
       "title": "Nuk ka histori ende",
       "description": "Historitë e suksesit do të paraqiten këtu së shpejti!"
+    }
+  },
+  "campaigns": {
+    "title": "Fushata",
+    "description": "Mbështet kauzat dhe bëj ndryshim përmes donacioneve dhe advokimit.",
+    "viewCampaign": "Shiko Fushatën",
+    "by": "Nga",
+    "goal": "Objektivi",
+    "raised": "Mbledhur: ${amount}",
+    "daysLeft": "Ditë të Mbetura",
+    "category": "Kategoria",
+    "donors": "Donatorë",
+    "startDate": "Data e Fillimit",
+    "endDate": "Data e Përfundimit",
+    "share": "Ndaj",
+    "save": "Ruaj",
+    "organizedBy": "Organizuar Nga",
+    "verifiedOrganization": "Organizatë e Verifikuar",
+    "viewOrganization": "Shiko Organizatën",
+    "campaignStats": "Statistikat e Fushatës",
+    "target": "Objektivi",
+    "watchVideo": "Shiko Video",
+    "latestUpdates": "Përditësimet e Fundit",
+    "milestones": "Arritjet",
+    "noUpdates": "Nuk janë postuar përditësime ende.",
+    "noMilestones": "Nuk janë vendosur arritje për këtë fushatë.",
+    "noCampaigns": "Nuk u gjetën fushata",
+    "noCampaignsDescription": "Nuk ka fushata që përputhen me kriteret tuaja në këtë moment.",
+    "filters": {
+      "all": "Të Gjitha Fushatat",
+      "active": "Aktive",
+      "completed": "Të Përfunduara"
+    },
+    "sort": "Rendit sipas",
+    "sortOptions": {
+      "newest": "Më të Rejat",
+      "endingSoon": "Përfundojnë Së Shpejti",
+      "mostFunded": "Më të Financuarat",
+      "leastFunded": "Më Pak të Financuarat"
+    },
+    "tabs": {
+      "about": "Rreth",
+      "updates": "Përditësime",
+      "milestones": "Arritje"
+    }
+  },
+  "donations": {
+    "title": "Bëj një Donacion",
+    "supportMessage": "Mbështet {campaign} me kontributin tënd.",
+    "selectAmount": "Zgjidh Shumën",
+    "custom": "Personalizuar",
+    "paymentMethod": "Metoda e Pagesës",
+    "creditCard": "Kartë Krediti",
+    "donateAnonymously": "Dhurojë në mënyrë anonime",
+    "anonymousDescription": "Emri juaj nuk do të shfaqet publikisht",
+    "message": "Mesazh",
+    "optional": "opsionale",
+    "messagePlaceholder": "Shto një mesazh mbështetjeje...",
+    "donate": "Dhuro {amount}",
+    "processing": "Duke procesuar...",
+    "thankYou": "Faleminderit!",
+    "successMessage": "Donacioni juaj prej ${amount} është procesuar me sukses.",
+    "donateAgain": "Dhuro Përsëri",
+    "loginRequired": "Kërkohet Hyrja",
+    "loginMessage": "Ju lutemi hyni për të bërë një donacion.",
+    "invalidAmount": "Ju lutemi vendosni një shumë të vlefshme donacioni",
+    "processingError": "Ndodhi një gabim gjatë procesimit të donacionit tuaj. Ju lutemi provoni përsëri."
+  },
+  "organizations": {
+    "title": "Organizatat",
+    "description": "Zbulo OJQ-të dhe grupet aktiviste që po bëjnë ndryshime.",
+    "verified": "E Verifikuar",
+    "viewProfile": "Shiko Profilin",
+    "visitWebsite": "Vizito Faqen",
+    "contact": "Kontakto",
+    "aboutUs": "Rreth Nesh",
+    "mission": "Misioni Ynë",
+    "vision": "Vizioni Ynë",
+    "details": "Detajet e Organizatës",
+    "founded": "Themeluar",
+    "type": "Lloji",
+    "headquarters": "Selia",
+    "regions": "Rajonet e Veprimit",
+    "team": "Ekipi Ynë",
+    "impact": "Ndikimi Ynë",
+    "campaigns": "Fushatat",
+    "pastProjects": "Projektet e Kaluara",
+    "present": "Tani",
+    "peopleHelped": "Njerëz të Ndihmuar",
+    "areasCovered": "Zona të Mbuluara",
+    "volunteerHours": "Orë Vullnetarizmi",
+    "noTeamMembers": "Nuk janë shtuar ende anëtarë të ekipit.",
+    "noImpactData": "Nuk janë dhënë ende të dhëna për ndikimin.",
+    "noCampaigns": "Kjo organizatë nuk ka krijuar ende asnjë fushatë.",
+    "noOrganizations": "Nuk u gjetën organizata",
+    "noOrganizationsDescription": "Nuk ka organizata që përputhen me kriteret tuaja në këtë moment.",
+    "searchPlaceholder": "Kërko organizata...",
+    "filters": {
+      "all": "Të Gjitha Organizatat",
+      "verified": "Vetëm të Verifikuara"
+    },
+    "tabs": {
+      "about": "Rreth",
+      "campaigns": "Fushatat",
+      "team": "Ekipi",
+      "impact": "Ndikimi"
+    }
+  },
+  "search": {
+    "placeholder": "Kërko për postime, fushata, organizata...",
+    "resultsFor": "Rezultatet e Kërkimit për \"{query}\"",
+    "foundResults": "U gjetën {count} rezultate",
+    "noResults": "Nuk u gjetën rezultate",
+    "noResultsDescription": "Nuk mund të gjenim përputhje për kërkimin tuaj. Provoni fjalë kyçe të ndryshme ose shfletoni kategoritë tona.",
+    "backToHome": "Kthehu në Faqen Kryesore",
+    "viewAllResults": "Shiko të gjitha rezultatet",
+    "types": {
+      "post": "Postim",
+      "campaign": "Fushatë",
+      "organization": "Organizatë"
+    },
+    "tabs": {
+      "all": "Të Gjitha Rezultatet",
+      "posts": "Postimet",
+      "campaigns": "Fushatat",
+      "organizations": "Organizatat"
     }
   },
   "auth": {
@@ -99,11 +262,39 @@
   },
   "errors": {
     "fetchFailed": "Dështoi në ngarkim të të dhënave. Ju lutemi provoni përsëri.",
+    "searchFailed": "Dështoi në kryerjen e kërkimit. Ju lutemi provoni përsëri.",
     "loginFailed": "Hyrja dështoi. Ju lutemi kontrolloni kredencialet tuaja.",
     "registerFailed": "Regjistrimi dështoi. Ju lutemi provoni përsëri.",
+    "postFailed": "Dështoi në krijimin e postimit. Ju lutemi provoni përsëri.",
+    "commentFailed": "Dështoi në postimin e komentit. Ju lutemi provoni përsëri.",
+    "postNotFound": "Postimi që po kërkoni nuk mund të gjendet.",
+    "opportunityNotFound": "Mundësia që po kërkoni nuk mund të gjendet.",
+    "storyNotFound": "Historia e suksesit që po kërkoni nuk mund të gjendet.",
+    "campaignNotFound": "Fushata që po kërkoni nuk mund të gjendet.",
+    "organizationNotFound": "Organizata që po kërkoni nuk mund të gjendet.",
     "required": "Kjo fushë është e detyrueshme",
     "invalidEmail": "Ju lutemi vendosni një adresë email-i të vlefshme",
     "passwordLength": "Fjalëkalimi duhet të jetë të paktën 8 karaktere",
-    "passwordMatch": "Fjalëkalimet nuk përputhen"
+    "passwordMatch": "Fjalëkalimet nuk përputhen",
+    "requiredFields": "Ju lutemi plotësoni të gjitha fushat e kërkuara"
+  },
+  "common": {
+    "goBack": "Kthehu Mbrapa",
+    "tryAgain": "Provo Përsëri",
+    "loading": "Duke ngarkuar...",
+    "enabled": "Aktivizuar",
+    "disabled": "Çaktivizuar"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "moderator": "Moderator",
+    "activist": "Aktivist",
+    "organization": "Organizatë"
+  },
+  "accessDenied": {
+    "title": "Aksesi i Mohuar",
+    "message": "Nuk keni leje për të hyrë në këtë faqe.",
+    "backHome": "Kthehu në Faqen Kryesore",
+    "login": "Hyr"
   }
 }

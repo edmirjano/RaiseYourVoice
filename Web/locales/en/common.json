@@ -7,10 +7,13 @@
     "feed": "Social Feed",
     "opportunities": "Opportunities",
     "successStories": "Success Stories",
+    "campaigns": "Campaigns",
+    "organizations": "Organizations",
     "profile": "Profile",
     "login": "Log In",
     "register": "Register",
-    "logout": "Log Out"
+    "logout": "Log Out",
+    "adminDashboard": "Admin Dashboard"
   },
   "footer": {
     "tagline": "Empowering activists worldwide",
@@ -24,17 +27,49 @@
     "title": "Social Feed",
     "description": "Connect with activists and organizations making a difference.",
     "createPost": "Create Post",
+    "postTitlePlaceholder": "Title of your post",
+    "postContentPlaceholder": "Share your thoughts, ideas, or experiences...",
+    "tagsPlaceholder": "Add tags separated by commas",
+    "tagsHelp": "Tags help others find your content",
+    "locationPlaceholder": "City, Country",
+    "locationHelp": "Add location for events and opportunities",
+    "eventDateHelp": "Add date for events and opportunities",
+    "chooseMedia": "Choose media files",
+    "posting": "Posting...",
+    "post": "Post",
     "likes": "Likes",
     "comments": "Comments",
     "noPosts": {
       "title": "No posts yet",
       "description": "Be the first to share your activism journey!"
+    },
+    "postTypes": {
+      "activism": "Activism Post",
+      "opportunity": "Opportunity",
+      "successStory": "Success Story"
     }
+  },
+  "comments": {
+    "title": "Comments",
+    "placeholder": "Write a comment...",
+    "submit": "Post Comment",
+    "submitting": "Posting...",
+    "loginToComment": "Log in to join the conversation",
+    "noComments": "No comments yet. Be the first to comment!",
+    "like": "Like",
+    "reply": "Reply"
   },
   "opportunities": {
     "title": "Opportunities",
     "description": "Discover funding, events, and ways to get involved.",
     "createOpportunity": "Create Opportunity",
+    "viewDetails": "View Details",
+    "register": "Register",
+    "share": "Share",
+    "saveToCalendar": "Save to Calendar",
+    "location": "Location",
+    "date": "Date",
+    "description": "Description",
     "categories": {
       "funding": "Funding",
       "events": "Events",
@@ -50,11 +85,139 @@
   "successStories": {
     "title": "Success Stories",
     "description": "Learn from successful activism campaigns and inspiring individuals.",
+    "createStory": "Share Your Story",
+    "readMore": "Read More",
     "featuredActivist": "Activist of the Month",
     "organizationSpotlight": "Organization Spotlight",
     "noStories": {
       "title": "No stories yet",
       "description": "Success stories will be featured here soon!"
+    }
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "description": "Support causes and make a difference through donations and advocacy.",
+    "viewCampaign": "View Campaign",
+    "by": "By",
+    "goal": "Goal",
+    "raised": "Raised: ${amount}",
+    "daysLeft": "Days Left",
+    "category": "Category",
+    "donors": "Donors",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "share": "Share",
+    "save": "Save",
+    "organizedBy": "Organized By",
+    "verifiedOrganization": "Verified Organization",
+    "viewOrganization": "View Organization",
+    "campaignStats": "Campaign Stats",
+    "target": "Target",
+    "watchVideo": "Watch Video",
+    "latestUpdates": "Latest Updates",
+    "milestones": "Milestones",
+    "noUpdates": "No updates have been posted yet.",
+    "noMilestones": "No milestones have been set for this campaign.",
+    "noCampaigns": "No campaigns found",
+    "noCampaignsDescription": "There are no campaigns matching your criteria at the moment.",
+    "filters": {
+      "all": "All Campaigns",
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "sort": "Sort by",
+    "sortOptions": {
+      "newest": "Newest",
+      "endingSoon": "Ending Soon",
+      "mostFunded": "Most Funded",
+      "leastFunded": "Least Funded"
+    },
+    "tabs": {
+      "about": "About",
+      "updates": "Updates",
+      "milestones": "Milestones"
+    }
+  },
+  "donations": {
+    "title": "Make a Donation",
+    "supportMessage": "Support {campaign} with your contribution.",
+    "selectAmount": "Select Amount",
+    "custom": "Custom",
+    "paymentMethod": "Payment Method",
+    "creditCard": "Credit Card",
+    "donateAnonymously": "Donate anonymously",
+    "anonymousDescription": "Your name will not be displayed publicly",
+    "message": "Message",
+    "optional": "optional",
+    "messagePlaceholder": "Add a message of support...",
+    "donate": "Donate {amount}",
+    "processing": "Processing...",
+    "thankYou": "Thank You!",
+    "successMessage": "Your donation of ${amount} has been processed successfully.",
+    "donateAgain": "Donate Again",
+    "loginRequired": "Login Required",
+    "loginMessage": "Please log in to make a donation.",
+    "invalidAmount": "Please enter a valid donation amount",
+    "processingError": "There was an error processing your donation. Please try again."
+  },
+  "organizations": {
+    "title": "Organizations",
+    "description": "Discover NGOs and activist groups making a difference.",
+    "verified": "Verified",
+    "viewProfile": "View Profile",
+    "visitWebsite": "Visit Website",
+    "contact": "Contact",
+    "aboutUs": "About Us",
+    "mission": "Our Mission",
+    "vision": "Our Vision",
+    "details": "Organization Details",
+    "founded": "Founded",
+    "type": "Type",
+    "headquarters": "Headquarters",
+    "regions": "Operating Regions",
+    "team": "Our Team",
+    "impact": "Our Impact",
+    "campaigns": "Campaigns",
+    "pastProjects": "Past Projects",
+    "present": "Present",
+    "peopleHelped": "People Helped",
+    "areasCovered": "Areas Covered",
+    "volunteerHours": "Volunteer Hours",
+    "noTeamMembers": "No team members have been added yet.",
+    "noImpactData": "No impact data has been provided yet.",
+    "noCampaigns": "This organization has not created any campaigns yet.",
+    "noOrganizations": "No organizations found",
+    "noOrganizationsDescription": "There are no organizations matching your criteria at the moment.",
+    "searchPlaceholder": "Search organizations...",
+    "filters": {
+      "all": "All Organizations",
+      "verified": "Verified Only"
+    },
+    "tabs": {
+      "about": "About",
+      "campaigns": "Campaigns",
+      "team": "Team",
+      "impact": "Impact"
+    }
+  },
+  "search": {
+    "placeholder": "Search for posts, campaigns, organizations...",
+    "resultsFor": "Search Results for \"{query}\"",
+    "foundResults": "Found {count} results",
+    "noResults": "No results found",
+    "noResultsDescription": "We couldn't find any matches for your search. Try different keywords or browse our categories.",
+    "backToHome": "Back to Home",
+    "viewAllResults": "View all results",
+    "types": {
+      "post": "Post",
+      "campaign": "Campaign",
+      "organization": "Organization"
+    },
+    "tabs": {
+      "all": "All Results",
+      "posts": "Posts",
+      "campaigns": "Campaigns",
+      "organizations": "Organizations"
     }
   },
   "auth": {
@@ -99,11 +262,39 @@
   },
   "errors": {
     "fetchFailed": "Failed to load data. Please try again.",
+    "searchFailed": "Failed to perform search. Please try again.",
     "loginFailed": "Login failed. Please check your credentials.",
     "registerFailed": "Registration failed. Please try again.",
+    "postFailed": "Failed to create post. Please try again.",
+    "commentFailed": "Failed to post comment. Please try again.",
+    "postNotFound": "The post you're looking for could not be found.",
+    "opportunityNotFound": "The opportunity you're looking for could not be found.",
+    "storyNotFound": "The success story you're looking for could not be found.",
+    "campaignNotFound": "The campaign you're looking for could not be found.",
+    "organizationNotFound": "The organization you're looking for could not be found.",
     "required": "This field is required",
     "invalidEmail": "Please enter a valid email address",
     "passwordLength": "Password must be at least 8 characters",
-    "passwordMatch": "Passwords do not match"
+    "passwordMatch": "Passwords do not match",
+    "requiredFields": "Please fill in all required fields"
+  },
+  "common": {
+    "goBack": "Go Back",
+    "tryAgain": "Try Again",
+    "loading": "Loading...",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "moderator": "Moderator",
+    "activist": "Activist",
+    "organization": "Organization"
+  },
+  "accessDenied": {
+    "title": "Access Denied",
+    "message": "You don't have permission to access this page.",
+    "backHome": "Back to Home",
+    "login": "Log In"
   }
 }
