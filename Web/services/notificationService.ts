@@ -55,3 +55,20 @@ export const broadcastNotification = async (notification: Partial<Notification>)
   const response = await apiClient.post<Notification>('/notifications/broadcast', notification);
   return response.data;
 };
+
+// Admin notification template management
+export async function getNotificationTemplates() {
+  return apiClient.get('/admin/notification-templates').then(r => r.data);
+}
+
+export async function createNotificationTemplate(data) {
+  return apiClient.post('/admin/notification-templates', data).then(r => r.data);
+}
+
+export async function updateNotificationTemplate(id, data) {
+  return apiClient.put(`/admin/notification-templates/${id}`, data).then(r => r.data);
+}
+
+export async function deleteNotificationTemplate(id) {
+  return apiClient.delete(`/admin/notification-templates/${id}`).then(r => r.data);
+}
