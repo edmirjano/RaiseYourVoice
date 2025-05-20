@@ -13,7 +13,8 @@
     "login": "Hyr",
     "register": "Regjistrohu",
     "logout": "Dil",
-    "adminDashboard": "Paneli i Administratorit"
+    "adminDashboard": "Paneli i Administratorit",
+    "home": "Kryefaqja"
   },
   "footer": {
     "tagline": "Duke fuqizuar aktivistët në mbarë botën",
@@ -21,7 +22,11 @@
     "privacy": "Politika e Privatësisë",
     "terms": "Kushtet e Shërbimit",
     "contact": "Na Kontaktoni",
-    "rights": "Të Gjitha të Drejtat e Rezervuara"
+    "rights": "Të Gjitha të Drejtat e Rezervuara",
+    "navigation": "Navigimi",
+    "resources": "Burime",
+    "faq": "Pyetje të Shpeshta",
+    "blog": "Blog"
   },
   "feed": {
     "title": "Postimet Sociale",
@@ -39,6 +44,13 @@
     "post": "Posto",
     "likes": "Pëlqime",
     "comments": "Komente",
+    "loadMore": "Ngarko Më Shumë",
+    "hideFilters": "Fshih Filtrat",
+    "showFilters": "Shfaq Filtrat",
+    "searchPlaceholder": "Kërko postime...",
+    "search": "Kërko",
+    "popularTags": "Etiketat Popullore",
+    "uploading": "Duke ngarkuar",
     "noPosts": {
       "title": "Nuk ka postime ende",
       "description": "Bëhu i pari që ndan udhëtimin tënd të aktivizmit!"
@@ -47,7 +59,19 @@
       "activism": "Postim Aktivizmi",
       "opportunity": "Mundësi",
       "successStory": "Histori Suksesi"
-    }
+    },
+    "filters": {
+      "all": "Të Gjitha Postimet",
+      "activism": "Aktivizëm",
+      "opportunities": "Mundësi",
+      "successStories": "Histori Suksesi"
+    },
+    "sort": {
+      "recent": "Më të Rejat",
+      "popular": "Më Popullore",
+      "comments": "Më Shumë Komente"
+    },
+    "postType": "Lloji i Postimit"
   },
   "comments": {
     "title": "Komentet",
@@ -57,12 +81,18 @@
     "loginToComment": "Hyni për t'u bashkuar me bisedën",
     "noComments": "Nuk ka komente ende. Bëhu i pari që komenton!",
     "like": "Pëlqej",
-    "reply": "Përgjigju"
+    "reply": "Përgjigju",
+    "replyPlaceholder": "Shkruaj një përgjigje...",
+    "showReplies": "Shfaq {{count}} përgjigje",
+    "hideReplies": "Fshih përgjigjet",
+    "loadingReplies": "Duke ngarkuar përgjigjet...",
+    "cancel": "Anulo"
   },
   "opportunities": {
     "title": "Mundësitë",
     "description": "Zbulo financime, ngjarje dhe mënyra për t'u përfshirë.",
     "createOpportunity": "Krijo Mundësi",
+    "editOpportunity": "Ndrysho Mundësinë",
     "viewDetails": "Shiko Detajet",
     "register": "Regjistrohu",
     "share": "Ndaj",
@@ -70,6 +100,36 @@
     "location": "Vendndodhja",
     "date": "Data",
     "description": "Përshkrimi",
+    "tags": "Etiketat",
+    "locationMap": "Harta e Vendndodhjes",
+    "loadingMap": "Duke ngarkuar hartën...",
+    "mapLoadError": "Dështoi në ngarkimin e Google Maps. Ju lutemi kontrolloni lidhjen tuaj të internetit.",
+    "mapInitError": "Dështoi në inicializimin e hartës. Ju lutemi provoni përsëri më vonë.",
+    "invalidLocation": "Vendndodhje e pavlefshme e zgjedhur.",
+    "autocompleteError": "Gabim në inicializimin e kërkimit të vendndodhjes.",
+    "loadingPlaces": "Duke ngarkuar vendet...",
+    "search": "Kërko",
+    "searchPlaceholder": "Kërko mundësi...",
+    "category": "Kategoria",
+    "allCategories": "Të Gjitha Kategoritë",
+    "dateRange": "Periudha Kohore",
+    "allDates": "Të Gjitha Datat",
+    "today": "Sot",
+    "tomorrow": "Nesër",
+    "thisWeek": "Këtë Javë",
+    "thisMonth": "Këtë Muaj",
+    "showAdvanced": "Më Shumë Filtra",
+    "hideAdvanced": "Më Pak Filtra",
+    "clearFilters": "Pastro Filtrat",
+    "locationPlaceholder": "Kërko për një vendndodhje...",
+    "copiedToClipboard": "Lidhja u kopjua në clipboard!",
+    "hideRegistration": "Fshih Formularin e Regjistrimit",
+    "registrationSuccess": "Regjistrimi u Krye me Sukses!",
+    "registrationSuccessMessage": "Ju jeni regjistruar me sukses për {{opportunity}}. Do të merrni një email konfirmimi së shpejti.",
+    "registerAnother": "Regjistro Një Person Tjetër",
+    "browseMore": "Shfleto Më Shumë Mundësi",
+    "registrationError": "Dështoi në regjistrimin për këtë mundësi. Ju lutemi provoni përsëri.",
+    "loginToRegister": "Ju lutemi hyni për t'u regjistruar për këtë mundësi.",
     "categories": {
       "funding": "Financim",
       "events": "Ngjarje",
@@ -80,6 +140,37 @@
     "noOpportunities": {
       "title": "Nuk ka mundësi ende",
       "description": "Rikontrollo së shpejti për mundësi!"
+    },
+    "form": {
+      "title": "Titulli",
+      "titlePlaceholder": "Vendosni një titull përshkrues",
+      "titleMinLength": "Titulli duhet të jetë të paktën 5 karaktere",
+      "description": "Përshkrimi",
+      "descriptionPlaceholder": "Jepni detaje për këtë mundësi",
+      "descriptionMinLength": "Përshkrimi duhet të jetë të paktën 20 karaktere",
+      "tags": "Kategoritë & Etiketat",
+      "tagsPlaceholder": "financim, vullnetarizëm, rini, etj.",
+      "tagsHelp": "Shtoni kategori dhe etiketa relevante të ndara me presje",
+      "location": "Vendndodhja",
+      "locationPlaceholder": "Kërko për një vendndodhje",
+      "locationSelected": "Vendndodhja e zgjedhur",
+      "eventDate": "Data & Ora e Ngjarjes",
+      "media": "Media",
+      "mediaHelp": "Shtoni imazhe ose video (maksimumi 5 skedarë, 10MB secili)",
+      "submit": "Krijo Mundësi",
+      "update": "Përditëso Mundësi",
+      "name": "Emri i Plotë",
+      "namePlaceholder": "Vendosni emrin tuaj të plotë",
+      "email": "Email",
+      "emailPlaceholder": "Vendosni adresën tuaj të emailit",
+      "phone": "Numri i Telefonit",
+      "phonePlaceholder": "Vendosni numrin tuaj të telefonit (opsionale)",
+      "phoneHelp": "Do ta përdorim këtë vetëm për t'ju kontaktuar në lidhje me këtë mundësi",
+      "message": "Mesazh",
+      "messagePlaceholder": "Ndonjë informacion shtesë ose pyetje?",
+      "messageHelp": "Mesazh opsional për organizatorët",
+      "agreeToTerms": "Unë pranoj kushtet dhe rregullat",
+      "termsRequired": "Ju duhet të pranoni kushtet dhe rregullat"
     }
   },
   "successStories": {
@@ -324,6 +415,7 @@
     "loginFailed": "Hyrja dështoi. Ju lutemi kontrolloni kredencialet tuaja.",
     "registerFailed": "Regjistrimi dështoi. Ju lutemi provoni përsëri.",
     "postFailed": "Dështoi në krijimin e postimit. Ju lutemi provoni përsëri.",
+    "updateFailed": "Dështoi në përditësim. Ju lutemi provoni përsëri.",
     "commentFailed": "Dështoi në postimin e komentit. Ju lutemi provoni përsëri.",
     "postNotFound": "Postimi që po kërkoni nuk mund të gjendet.",
     "opportunityNotFound": "Mundësia që po kërkoni nuk mund të gjendet.",
@@ -342,7 +434,12 @@
     "loading": "Duke ngarkuar...",
     "enabled": "Aktivizuar",
     "disabled": "Çaktivizuar",
-    "optional": "opsionale"
+    "optional": "opsionale",
+    "cancel": "Anulo",
+    "save": "Ruaj",
+    "edit": "Ndrysho",
+    "delete": "Fshi",
+    "submitting": "Duke dërguar..."
   },
   "roles": {
     "admin": "Administrator",

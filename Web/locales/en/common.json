@@ -13,7 +13,8 @@
     "login": "Log In",
     "register": "Register",
     "logout": "Log Out",
-    "adminDashboard": "Admin Dashboard"
+    "adminDashboard": "Admin Dashboard",
+    "home": "Home"
   },
   "footer": {
     "tagline": "Empowering activists worldwide",
@@ -21,7 +22,11 @@
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "contact": "Contact Us",
-    "rights": "All Rights Reserved"
+    "rights": "All Rights Reserved",
+    "navigation": "Navigation",
+    "resources": "Resources",
+    "faq": "FAQ",
+    "blog": "Blog"
   },
   "feed": {
     "title": "Social Feed",
@@ -39,6 +44,13 @@
     "post": "Post",
     "likes": "Likes",
     "comments": "Comments",
+    "loadMore": "Load More",
+    "hideFilters": "Hide Filters",
+    "showFilters": "Show Filters",
+    "searchPlaceholder": "Search posts...",
+    "search": "Search",
+    "popularTags": "Popular Tags",
+    "uploading": "Uploading",
     "noPosts": {
       "title": "No posts yet",
       "description": "Be the first to share your activism journey!"
@@ -47,7 +59,19 @@
       "activism": "Activism Post",
       "opportunity": "Opportunity",
       "successStory": "Success Story"
-    }
+    },
+    "filters": {
+      "all": "All Posts",
+      "activism": "Activism",
+      "opportunities": "Opportunities",
+      "successStories": "Success Stories"
+    },
+    "sort": {
+      "recent": "Most Recent",
+      "popular": "Most Popular",
+      "comments": "Most Comments"
+    },
+    "postType": "Post Type"
   },
   "comments": {
     "title": "Comments",
@@ -57,12 +81,18 @@
     "loginToComment": "Log in to join the conversation",
     "noComments": "No comments yet. Be the first to comment!",
     "like": "Like",
-    "reply": "Reply"
+    "reply": "Reply",
+    "replyPlaceholder": "Write a reply...",
+    "showReplies": "Show {{count}} replies",
+    "hideReplies": "Hide replies",
+    "loadingReplies": "Loading replies...",
+    "cancel": "Cancel"
   },
   "opportunities": {
     "title": "Opportunities",
     "description": "Discover funding, events, and ways to get involved.",
     "createOpportunity": "Create Opportunity",
+    "editOpportunity": "Edit Opportunity",
     "viewDetails": "View Details",
     "register": "Register",
     "share": "Share",
@@ -70,6 +100,36 @@
     "location": "Location",
     "date": "Date",
     "description": "Description",
+    "tags": "Tags",
+    "locationMap": "Location Map",
+    "loadingMap": "Loading map...",
+    "mapLoadError": "Failed to load Google Maps. Please check your internet connection.",
+    "mapInitError": "Failed to initialize map. Please try again later.",
+    "invalidLocation": "Invalid location selected.",
+    "autocompleteError": "Error initializing location search.",
+    "loadingPlaces": "Loading places...",
+    "search": "Search",
+    "searchPlaceholder": "Search opportunities...",
+    "category": "Category",
+    "allCategories": "All Categories",
+    "dateRange": "Date Range",
+    "allDates": "All Dates",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "showAdvanced": "More Filters",
+    "hideAdvanced": "Less Filters",
+    "clearFilters": "Clear Filters",
+    "locationPlaceholder": "Search for a location...",
+    "copiedToClipboard": "Link copied to clipboard!",
+    "hideRegistration": "Hide Registration Form",
+    "registrationSuccess": "Registration Successful!",
+    "registrationSuccessMessage": "You have successfully registered for {{opportunity}}. You will receive a confirmation email shortly.",
+    "registerAnother": "Register Another Person",
+    "browseMore": "Browse More Opportunities",
+    "registrationError": "Failed to register for this opportunity. Please try again.",
+    "loginToRegister": "Please log in to register for this opportunity.",
     "categories": {
       "funding": "Funding",
       "events": "Events",
@@ -80,6 +140,37 @@
     "noOpportunities": {
       "title": "No opportunities yet",
       "description": "Check back soon for opportunities!"
+    },
+    "form": {
+      "title": "Title",
+      "titlePlaceholder": "Enter a descriptive title",
+      "titleMinLength": "Title must be at least 5 characters",
+      "description": "Description",
+      "descriptionPlaceholder": "Provide details about this opportunity",
+      "descriptionMinLength": "Description must be at least 20 characters",
+      "tags": "Categories & Tags",
+      "tagsPlaceholder": "funding, volunteer, youth, etc.",
+      "tagsHelp": "Add relevant categories and tags separated by commas",
+      "location": "Location",
+      "locationPlaceholder": "Search for a location",
+      "locationSelected": "Location selected",
+      "eventDate": "Event Date & Time",
+      "media": "Media",
+      "mediaHelp": "Add images or videos (max 5 files, 10MB each)",
+      "submit": "Create Opportunity",
+      "update": "Update Opportunity",
+      "name": "Full Name",
+      "namePlaceholder": "Enter your full name",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email address",
+      "phone": "Phone Number",
+      "phonePlaceholder": "Enter your phone number (optional)",
+      "phoneHelp": "We'll only use this to contact you about this opportunity",
+      "message": "Message",
+      "messagePlaceholder": "Any additional information or questions?",
+      "messageHelp": "Optional message to the organizers",
+      "agreeToTerms": "I agree to the terms and conditions",
+      "termsRequired": "You must agree to the terms and conditions"
     }
   },
   "successStories": {
@@ -324,6 +415,7 @@
     "loginFailed": "Login failed. Please check your credentials.",
     "registerFailed": "Registration failed. Please try again.",
     "postFailed": "Failed to create post. Please try again.",
+    "updateFailed": "Failed to update. Please try again.",
     "commentFailed": "Failed to post comment. Please try again.",
     "postNotFound": "The post you're looking for could not be found.",
     "opportunityNotFound": "The opportunity you're looking for could not be found.",
@@ -342,7 +434,12 @@
     "loading": "Loading...",
     "enabled": "Enabled",
     "disabled": "Disabled",
-    "optional": "optional"
+    "optional": "optional",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "submitting": "Submitting..."
   },
   "roles": {
     "admin": "Administrator",
