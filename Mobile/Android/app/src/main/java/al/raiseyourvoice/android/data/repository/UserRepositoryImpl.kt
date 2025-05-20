@@ -97,14 +97,13 @@ class UserRepositoryImpl @Inject constructor(
         )
     }
     
-    override suspend fun requestPasswordReset(email: String): Flow<Resource<Boolean>> {
-        return NetworkResponseHandler.handleUnitApiCall(
-            apiCall = {
-                userApiService.requestPasswordReset(
-                    mapOf("email" to email)
-                )
-            }
-        )
+    override suspend fun requestPasswordReset(email: String): Result<Unit> {
+        return try {
+            userApiService.requestPasswordReset(mapOf("email" to email))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
     
     override suspend fun logout(): Flow<Resource<Boolean>> {

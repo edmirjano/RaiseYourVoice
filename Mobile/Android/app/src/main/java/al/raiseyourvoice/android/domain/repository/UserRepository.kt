@@ -37,7 +37,7 @@ interface UserRepository : BaseRepository<User, String> {
     /**
      * Request a password reset for a user
      */
-    suspend fun requestPasswordReset(email: String): Flow<Resource<Boolean>>
+    suspend fun requestPasswordReset(email: String): Result<Unit>
     
     /**
      * Log out the current user

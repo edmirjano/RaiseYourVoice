@@ -4,6 +4,7 @@ import al.raiseyourvoice.android.domain.repository.UserRepository
 import al.raiseyourvoice.android.domain.usecase.auth.GetCurrentUserUseCase
 import al.raiseyourvoice.android.domain.usecase.auth.LoginUseCase
 import al.raiseyourvoice.android.domain.usecase.auth.RegisterUseCase
+import al.raiseyourvoice.android.domain.usecase.auth.PasswordRecoveryUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,6 +31,12 @@ object UseCaseModule {
     @Singleton
     fun provideGetCurrentUserUseCase(userRepository: UserRepository): GetCurrentUserUseCase {
         return GetCurrentUserUseCase(userRepository)
+    }
+    
+    @Provides
+    @Singleton
+    fun providePasswordRecoveryUseCase(userRepository: UserRepository): PasswordRecoveryUseCase {
+        return PasswordRecoveryUseCase(userRepository)
     }
     
     // TODO: Add more use case providers as they are implemented
