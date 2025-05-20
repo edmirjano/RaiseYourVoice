@@ -6,6 +6,9 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { PageLayout } from '../components/layout';
+import { Button } from '../components/common/Button/Button';
+import { ImageOptimizer } from '../components/common/ImageOptimizer/ImageOptimizer';
 
 export default function Home() {
   const { t } = useTranslation('common');
@@ -20,9 +23,13 @@ export default function Home() {
   }, [isAuthenticated, router]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <PageLayout
+      fullWidth
+      title="RaiseYourVoice - Amplify your activism"
+      description="Connect with activists, discover opportunities, and make a difference in your community."
+    >
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
             <svg
@@ -35,76 +42,55 @@ export default function Home() {
               <polygon points="50,0 100,0 50,100 0,100" />
             </svg>
 
-            <div className="relative pt-6 px-4 sm:px-6 lg:px-8">
-              <nav className="relative flex items-center justify-between sm:h-10 lg:justify-start" aria-label="Global">
-                <div className="flex items-center flex-grow flex-shrink-0 lg:flex-grow-0">
-                  <div className="flex items-center justify-between w-full md:w-auto">
-                    <Link href="/">
-                      <span className="text-2xl font-bold text-ios-black">RaiseYourVoice</span>
-                    </Link>
-                  </div>
-                </div>
-                <div className="hidden md:block md:ml-10 md:pr-4 md:space-x-8">
-                  <Link href="/feed" className="font-medium text-gray-500 hover:text-gray-900">
-                    {t('nav.feed')}
-                  </Link>
-                  <Link href="/opportunities" className="font-medium text-gray-500 hover:text-gray-900">
-                    {t('nav.opportunities')}
-                  </Link>
-                  <Link href="/success-stories" className="font-medium text-gray-500 hover:text-gray-900">
-                    {t('nav.successStories')}
-                  </Link>
-                  <Link href="/campaigns" className="font-medium text-gray-500 hover:text-gray-900">
-                    {t('nav.campaigns')}
-                  </Link>
-                  <Link href="/auth/login" className="font-medium text-ios-black hover:text-gray-900">
-                    {t('nav.login')}
-                  </Link>
-                </div>
-              </nav>
-            </div>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28"
-            >
-              <div className="sm:text-center lg:text-left">
-                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+            <div className="pt-10 sm:pt-16 lg:pt-8 xl:pt-16">
+              <div className="sm:text-center lg:text-left px-4 sm:px-8 xl:pr-16">
+                <motion.h1 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl"
+                >
                   <span className="block xl:inline">{t('app.name')}</span>{' '}
                   <span className="block text-ios-black xl:inline">{t('app.tagline')}</span>
-                </h1>
-                <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                </motion.h1>
+                <motion.p 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0"
+                >
                   Connect with activists, discover opportunities, and make a difference in your community.
-                </p>
-                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                </motion.p>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start"
+                >
                   <div className="rounded-md shadow">
-                    <Link
-                      href="/auth/register"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-ios-black hover:bg-opacity-90 md:py-4 md:text-lg md:px-10"
-                    >
-                      Get Started
+                    <Link href="/auth/register">
+                      <Button size="lg" variant="primary" className="w-full">
+                        Get Started
+                      </Button>
                     </Link>
                   </div>
                   <div className="mt-3 sm:mt-0 sm:ml-3">
-                    <Link
-                      href="/feed"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-ios-black bg-white border-gray-200 hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
-                    >
-                      Explore
+                    <Link href="/feed">
+                      <Button size="lg" variant="secondary" className="w-full">
+                        Explore
+                      </Button>
                     </Link>
                   </div>
-                </div>
+                </motion.div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
         <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-          <img
-            className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
+          <ImageOptimizer
             src="https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
             alt="People collaborating"
+            className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
           />
         </div>
       </div>
@@ -213,56 +199,23 @@ export default function Home() {
           </h2>
           <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
             <div className="inline-flex rounded-md shadow">
-              <Link
-                href="/auth/register"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-ios-black bg-white hover:bg-gray-50"
-              >
-                Get Started
+              <Link href="/auth/register">
+                <Button variant="secondary" size="lg">
+                  Get Started
+                </Button>
               </Link>
             </div>
             <div className="ml-3 inline-flex rounded-md shadow">
-              <Link
-                href="/about"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-ios-black bg-opacity-60 hover:bg-opacity-70"
-              >
-                Learn More
+              <Link href="/about">
+                <Button variant="primary" size="lg" className="bg-opacity-60 hover:bg-opacity-70">
+                  Learn More
+                </Button>
               </Link>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-white">
-        <div className="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
-          <nav className="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
-            <div className="px-5 py-2">
-              <Link href="/about" className="text-base text-gray-500 hover:text-gray-900">
-                About
-              </Link>
-            </div>
-            <div className="px-5 py-2">
-              <Link href="/privacy" className="text-base text-gray-500 hover:text-gray-900">
-                Privacy
-              </Link>
-            </div>
-            <div className="px-5 py-2">
-              <Link href="/terms" className="text-base text-gray-500 hover:text-gray-900">
-                Terms
-              </Link>
-            </div>
-            <div className="px-5 py-2">
-              <Link href="/contact" className="text-base text-gray-500 hover:text-gray-900">
-                Contact
-              </Link>
-            </div>
-          </nav>
-          <p className="mt-8 text-center text-base text-gray-400">
-            &copy; {new Date().getFullYear()} RaiseYourVoice. All rights reserved.
-          </p>
-        </div>
-      </footer>
-    </div>
+    </PageLayout>
   );
 }
 

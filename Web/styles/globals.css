@@ -20,12 +20,20 @@ body {
   @apply rounded-full px-6 py-2.5 font-semibold transition-all duration-200 text-white bg-ios-black hover:bg-opacity-90 active:bg-opacity-80;
 }
 
+.ios-button-secondary {
+  @apply rounded-full px-6 py-2.5 font-semibold transition-all duration-200 text-ios-black bg-white border border-gray-200 hover:bg-gray-50 active:bg-gray-100;
+}
+
+.ios-button-danger {
+  @apply rounded-full px-6 py-2.5 font-semibold transition-all duration-200 text-white bg-red-500 hover:bg-red-600 active:bg-red-700;
+}
+
 .ios-input {
-  @apply rounded-lg border border-gray-200 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-ios-black transition-all;
+  @apply rounded-lg border border-gray-200 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-ios-black focus:border-ios-black transition-all;
 }
 
 .ios-card {
-  @apply rounded-xl bg-white shadow-md transition-shadow hover:shadow-lg;
+  @apply rounded-xl bg-white shadow-sm transition-shadow hover:shadow-md;
 }
 
 /* Animations */
@@ -51,10 +59,6 @@ body {
 
 .ios-scale-out {
   @apply animate-[scale-out_0.15s_ease-in_forwards];
-}
-
-.ios-button-secondary {
-  @apply rounded-full px-6 py-2.5 font-semibold transition-all duration-200 text-ios-black bg-white border border-gray-200 hover:bg-gray-50 active:bg-gray-100;
 }
 
 /* Animation keyframes */
@@ -109,6 +113,59 @@ body {
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity 0.2s, transform 0.2s;
+}
+
+/* Aspect ratio utilities */
+.aspect-w-1 {
+  position: relative;
+  padding-bottom: calc(var(--tw-aspect-h) / var(--tw-aspect-w) * 100%);
+  --tw-aspect-w: 1;
+}
+
+.aspect-w-16 {
+  position: relative;
+  padding-bottom: calc(var(--tw-aspect-h) / var(--tw-aspect-w) * 100%);
+  --tw-aspect-w: 16;
+}
+
+.aspect-h-1 {
+  --tw-aspect-h: 1;
+}
+
+.aspect-h-9 {
+  --tw-aspect-h: 9;
+}
+
+.aspect-w-1 > *, .aspect-w-16 > * {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* Truncate text with ellipsis after specific number of lines */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 /* Accessibility */
