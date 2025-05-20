@@ -49,4 +49,10 @@
     <Protobuf Include="Protos\comment.proto" GrpcServices="Server" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="appsettings.Test.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
