@@ -1,0 +1,105 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Backend/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Backend/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+      
+      - name: Restore dependencies
+        run: dotnet restore Backend/RaiseYourVoice.Backend.sln
+      
+      - name: Build
+        run: dotnet build Backend/RaiseYourVoice.Backend.sln --configuration Release --no-restore
+      
+      - name: Test
+        run: dotnet test Backend/RaiseYourVoice.Backend.sln --configuration Release --no-build --verbosity normal
+      
+      - name: Publish
+        run: dotnet publish Backend/RaiseYourVoice.Api/RaiseYourVoice.Api.csproj --configuration Release --no-build --output ./publish
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-build
+          path: ./publish
+          retention-days: 3
+  
+  docker:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: backend-build
+          path: ./publish
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build and save Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./Backend
+          file: ./Backend/Dockerfile
+          push: false
+          tags: raiseyourvoice/backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/backend-image.tar
+      
+      - name: Create deployment package
+        run: |
+          mkdir -p /tmp/deployment
+          cp /tmp/backend-image.tar /tmp/deployment/
+          cp -r ./Infrastructure/k8s/backend /tmp/deployment/k8s
+          tar -czf /tmp/backend-deployment.tar.gz -C /tmp/deployment .
+      
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          source: /tmp/backend-deployment.tar.gz
+          target: /tmp/
+      
+      - name: Execute deployment script
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script: |
+            mkdir -p ~/deployments
+            tar -xzf /tmp/backend-deployment.tar.gz -C ~/deployments
+            docker load -i ~/deployments/backend-image.tar
+            kubectl apply -f ~/deployments/k8s/
+            kubectl rollout restart deployment backend-deployment
+            echo "Backend deployment completed at $(date)"

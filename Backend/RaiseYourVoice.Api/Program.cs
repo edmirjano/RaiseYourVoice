@@ -16,6 +16,11 @@ using Serilog.Formatting.Compact;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using RaiseYourVoice.Api.gRPC;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using RaiseYourVoice.Api.Swagger;
 
 // Initialize Serilog logger before anything else
 Log.Logger = new LoggerConfiguration()
@@ -59,67 +64,28 @@ try
     // Add services to the container
     builder.Services.AddControllers();
 
+    // Add API versioning
+    builder.Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+    });
+
+    builder.Services.AddVersionedApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
+
     // Configure strongly typed settings objects
     var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
     builder.Services.Configure<JwtSettings>(jwtSettingsSection);
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(c =>
-    {
-        c.SwaggerDoc("v1", new OpenApiInfo { Title = "RaiseYourVoice API", Version = "v1" });
-        
-        // Configure Swagger to use JWT authentication
-        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
-            Name = "Authorization",
-            In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey,
-            Scheme = "Bearer"
-        });
-
-        c.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {
-            {
-                new OpenApiSecurityScheme
-                {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    }
-                },
-                new string[] {}
-            }
-        });
-        
-        // Add API Key definition for Swagger
-        c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
-        {
-            Description = "API Key Authentication",
-            Name = "X-API-Key",
-            In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey,
-            Scheme = "ApiKeyScheme"
-        });
-
-        c.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {
-            {
-                new OpenApiSecurityScheme
-                {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "ApiKey"
-                    },
-                    In = ParameterLocation.Header
-                },
-                new string[] {}
-            }
-        });
-    });
+    builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+    builder.Services.AddSwaggerGen();
 
     // Add Infrastructure services
     builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -259,8 +225,19 @@ try
     // Configure the HTTP request pipeline
     if (app.Environment.IsDevelopment())
     {
+        var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+        
         app.UseSwagger();
-        app.UseSwaggerUI();
+        app.UseSwaggerUI(options =>
+        {
+            // Build a swagger endpoint for each discovered API version
+            foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+            {
+                options.SwaggerEndpoint(
+                    $"/swagger/{description.GroupName}/swagger.json",
+                    description.GroupName.ToUpperInvariant());
+            }
+        });
     }
 
     // Add global error handling middleware (should be first in the pipeline)
@@ -290,6 +267,7 @@ try
     // Map gRPC services
     app.MapGrpcService<PostServiceImpl>();
     app.MapGrpcService<AuthServiceImpl>();
+    app.MapGrpcService<CommentServiceImpl>();
 
     // Map health checks with detailed responses
     app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions

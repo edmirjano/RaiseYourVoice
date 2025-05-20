@@ -1,5 +1,35 @@
 # Changelog
 
+## [Backend Completion - Week 14] - 2025-05-05
+
+### Added
+- Implemented unit tests for security components:
+  - Added tests for EncryptionService
+  - Added tests for PasswordHasher
+  - Added tests for JwtKeyManager
+  - Added tests for AuthController
+- Enhanced API documentation with Swagger:
+  - Added API versioning support
+  - Configured Swagger UI with JWT authentication
+  - Added XML documentation support
+  - Implemented ConfigureSwaggerOptions for version-specific documentation
+- Set up CI/CD pipeline for backend:
+  - Created GitHub Actions workflow for automated builds and tests
+  - Added Docker image building and publishing
+  - Implemented Kubernetes deployment configuration
+  - Added secrets management template
+- Created Kubernetes deployment files:
+  - Added deployment.yaml with health checks and resource limits
+  - Created service.yaml with HTTP, HTTPS, and gRPC ports
+  - Added ingress.yaml with TLS configuration
+  - Created secrets template for sensitive configuration
+
+### Improved
+- Enhanced Program.cs with API versioning and Swagger configuration
+- Added XML documentation generation to API project
+- Improved error handling in gRPC services
+- Enhanced security with proper authentication in Kubernetes configuration
+
 ## [gRPC Services Implementation - Week 10] - 2025-05-04
 
 ### Added
@@ -333,7 +363,7 @@ Stripe.net
 - ✅ Kubernetes-compatible secrets strategy with documentation
 - ✅ JWT signing key rotation implementation
 - ✅ gRPC services for mobile app communication
+- ✅ Unit tests for security features
 
 ### Pending
-- ⏳ Automated tests for security features
 - ⏳ Complete CI/CD pipeline setup
